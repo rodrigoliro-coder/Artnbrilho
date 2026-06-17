@@ -489,10 +489,9 @@
       </div>
 
       <div class="nav-label">Financeiro</div>
-      <div class="nav-item" onclick="navigate('carne')">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4m4 0h2"/></svg>
-        <span>Carnê</span>
-        <span class="nav-badge" id="nav-badge-carne" style="display:none">0</span>
+      <div class="nav-item" onclick="navigate('precificacao')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Precificação</span>
       </div>
 
       <div class="nav-label">Vendas</div>
@@ -558,11 +557,10 @@
         <div class="card yellow"><div class="card-label">Itens em Estoque</div><div class="card-value" id="card-estoque">0</div><div class="card-sub">unidades totais</div></div>
         <div class="card red"><div class="card-label">Estoque Baixo</div><div class="card-value" id="card-baixo">0</div><div class="card-sub">produtos críticos</div></div>
         <div class="card"><div class="card-label">Trocas/Devol. (mês)</div><div class="card-value" id="card-trocas-mes">0</div><div class="card-sub">este mês</div></div>
-        <div class="card"><div class="card-label">Carnês Vencidos</div><div class="card-value" id="card-carnes-vencidos">0</div><div class="card-sub">parcelas em atraso</div></div>
+        <div class="card"><div class="card-label">Custo Total (estoque)</div><div class="card-value" id="card-custo-estoque" style="font-size:1.3rem">R$ 0</div><div class="card-sub">valor investido</div></div>
       </div>
       <div id="alert-estoque-baixo" style="display:none" class="alert alert-warning">⚠️ Atenção: há produtos com estoque abaixo do mínimo. Verifique a aba <strong>Produtos</strong>.</div>
       <div id="alert-aniversarios" style="display:none" class="alert"></div>
-      <div id="alert-carnes-vencidas" style="display:none" class="alert alert-warning"></div>
       <div class="chart-wrap">
         <div class="chart-title">Vendas – últimos 7 dias (R$)</div>
         <div class="bar-chart" id="chart-7dias"></div>
@@ -804,22 +802,25 @@
       </div>
     </div>
 
-    <!-- CARNÊ / CONTAS A RECEBER -->
-    <div id="page-carne" class="page">
-      <div class="page-header"><h2>Carnê / Contas a Receber</h2><p>Controle de pagamentos parcelados</p></div>
-      <div class="toolbar">
-        <div class="tab-bar" style="margin-bottom:0;border:none">
-          <button class="tab-btn active" id="tab-carne-aberto" onclick="filtrarCarne('aberto')">Em Aberto</button>
-          <button class="tab-btn" id="tab-carne-quitado" onclick="filtrarCarne('quitado')">Quitados</button>
+    <!-- PRECIFICAÇÃO / CUSTO -->
+    <div id="page-precificacao" class="page">
+      <div class="page-header"><h2>Precificação</h2><p>Analise o custo de cada peça e calcule o preço ideal com sua margem de lucro</p></div>
+      <div class="toolbar" style="align-items:center;gap:12px">
+        <input type="text" id="busca-precif" placeholder="Buscar produto…" oninput="renderPrecificacao()" style="min-width:200px">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:6px 14px">
+          <span style="font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap">Margem desejada</span>
+          <input type="number" id="margem-pct" value="50" min="0" max="9999" step="1"
+            style="width:64px;background:transparent;border:none;font-size:.95rem;font-weight:800;color:var(--brand);text-align:center;font-family:'Manrope',sans-serif"
+            oninput="renderPrecificacao()">
+          <span style="font-weight:800;color:var(--brand)">%</span>
         </div>
-        <button class="btn btn-primary" style="margin-left:auto" onclick="abrirModalCarne()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Novo Carnê
-        </button>
       </div>
+      <div class="cards" id="prec-cards" style="margin-bottom:20px"></div>
       <div class="table-wrap">
-        <table><thead><tr><th>Cliente</th><th>Descrição</th><th>Total</th><th>Parcelas</th><th>Pago</th><th>Restante</th><th>Próx. Venc.</th><th>Ações</th></tr></thead>
-        <tbody id="tabela-carne"></tbody></table>
+        <table>
+          <thead><tr><th>Produto</th><th>Custo</th><th>Preço Atual</th><th>Margem Atual</th><th id="th-prec-meta">Preço com 50% lucro</th><th>Situação</th></tr></thead>
+          <tbody id="tabela-precificacao"></tbody>
+        </table>
       </div>
     </div>
 
@@ -1228,8 +1229,8 @@ function clearAuthMsgs(...ids) {
 const PERFIL_LABEL = { admin: 'Administrador', operador: 'Operador', vendedor: 'Vendedor' };
 
 const PAGINAS_PERMITIDAS = {
-  admin:    ['dashboard','produtos','estoque','clientes','carne','etiquetas','vendas','historico','trocas','relatorios','calendario','usuarios','minha-conta'],
-  operador: ['dashboard','produtos','estoque','clientes','carne','etiquetas','vendas','historico','trocas','relatorios','calendario','minha-conta'],
+  admin:    ['dashboard','produtos','estoque','clientes','precificacao','etiquetas','vendas','historico','trocas','relatorios','calendario','usuarios','minha-conta'],
+  operador: ['dashboard','produtos','estoque','clientes','precificacao','etiquetas','vendas','historico','trocas','relatorios','calendario','minha-conta'],
   vendedor: ['dashboard','vendas','historico','minha-conta'],
 };
 
@@ -1449,8 +1450,8 @@ function iniciarApp() {
 // ═══════════════════════════════════════════════════
 //  NAVEGAÇÃO
 // ═══════════════════════════════════════════════════
-const TODAS_PAGINAS = ['dashboard','produtos','estoque','clientes','carne','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
-const NAV_ITEMS     = ['dashboard','produtos','estoque','clientes','carne','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
+const TODAS_PAGINAS = ['dashboard','produtos','estoque','clientes','precificacao','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
+const NAV_ITEMS     = ['dashboard','produtos','estoque','clientes','precificacao','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
 
 function navigate(page) {
   const perfil    = sessaoAtual?.perfil || 'vendedor';
@@ -1481,7 +1482,7 @@ function navigate(page) {
     produtos:     renderProdutos,
     estoque:      () => { renderEstoqueInventario(); populateSelects(); renderMovimentos(); },
     clientes:     renderClientes,
-    carne:        () => { renderCarne(); populateCarneClientes(); },
+    precificacao: renderPrecificacao,
     etiquetas:    renderEtiquetas,
     vendas:       () => { populateSelects(); populateVendaClientes(); calcularTotal(); },
     historico:    renderHistorico,
@@ -2037,16 +2038,10 @@ function renderDashboard() {
   const trocasMes=trocas.filter(t=>t.criadoEm&&t.criadoEm.slice(0,7)===mes).length;
   const cardTrocas=document.getElementById('card-trocas-mes');if(cardTrocas)cardTrocas.textContent=trocasMes;
 
-  // Carnês vencidos
-  const hjStr=hj;
-  let vencidas=0;
-  carnes.forEach(c=>c.parcela.forEach(p=>{if(!p.pago&&p.vencimento<hjStr)vencidas++;}));
-  const cardCarnes=document.getElementById('card-carnes-vencidos');if(cardCarnes)cardCarnes.textContent=vencidas;
-  const alCarnes=document.getElementById('alert-carnes-vencidas');
-  if(alCarnes){if(vencidas>0){alCarnes.style.display='';alCarnes.textContent=`⚠️ ${vencidas} parcela${vencidas!==1?'s':''} de carnê vencida${vencidas!==1?'s':''}. Verifique a aba Carnê.`;}else alCarnes.style.display='none';}
-  // Atualizar badge do carnê na sidebar
-  const badge=document.getElementById('nav-badge-carne');
-  if(badge){badge.style.display=vencidas>0?'':'none';badge.textContent=vencidas;}
+  // Custo total do estoque
+  const custoTotal = produtos.reduce((s,p) => s + (p.custo||0) * p.estoque, 0);
+  const cardCusto = document.getElementById('card-custo-estoque');
+  if (cardCusto) cardCusto.textContent = brl(custoTotal);
 
   // Meta do mês
   const meta=metas[mes]||0;
@@ -2339,6 +2334,77 @@ function salvarCliente() {
 function excluirCliente(id) {
   if (!confirm('Excluir este cliente?')) return;
   clientes = clientes.filter(c => c.id !== id); salvarClientes(); renderClientes();
+}
+
+// ═══════════════════════════════════════════════════
+//  PRECIFICAÇÃO
+// ═══════════════════════════════════════════════════
+function renderPrecificacao() {
+  const margem = parseFloat(document.getElementById('margem-pct')?.value) || 50;
+  const busca  = (document.getElementById('busca-precif')?.value || '').toLowerCase();
+
+  // atualiza cabeçalho da coluna
+  const th = document.getElementById('th-prec-meta');
+  if (th) th.textContent = `Preço com ${margem}% de lucro`;
+
+  const filtrados = produtos.filter(p =>
+    !busca || p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca)
+  );
+
+  // cards de resumo
+  const semCusto     = filtrados.filter(p => !p.custo || p.custo === 0).length;
+  const emPrejuizo   = filtrados.filter(p => p.custo > 0 && precoEfetivo(p) < p.custo).length;
+  const abaixoMeta   = filtrados.filter(p => p.custo > 0 && precoEfetivo(p) >= p.custo && precoEfetivo(p) < p.custo * (1 + margem / 100)).length;
+  const ok           = filtrados.filter(p => p.custo > 0 && precoEfetivo(p) >= p.custo * (1 + margem / 100)).length;
+  const cardsEl = document.getElementById('prec-cards');
+  if (cardsEl) cardsEl.innerHTML = `
+    <div class="card"><div class="card-label">Margem OK</div><div class="card-value" style="color:var(--green)">${ok}</div><div class="card-sub">acima de ${margem}%</div></div>
+    <div class="card"><div class="card-label">Abaixo da Meta</div><div class="card-value" style="color:var(--yellow)">${abaixoMeta}</div><div class="card-sub">lucro abaixo de ${margem}%</div></div>
+    <div class="card"><div class="card-label">Em Prejuízo</div><div class="card-value" style="color:var(--red)">${emPrejuizo}</div><div class="card-sub">preço abaixo do custo</div></div>
+    <div class="card"><div class="card-label">Sem Custo</div><div class="card-value" style="color:var(--muted)">${semCusto}</div><div class="card-sub">custo não informado</div></div>`;
+
+  const tbody = document.getElementById('tabela-precificacao');
+  if (!filtrados.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(p => {
+    const custo          = p.custo || 0;
+    const precoVenda     = precoEfetivo(p);
+    const margemAtual    = custo > 0 ? ((precoVenda - custo) / custo * 100) : null;
+    const precoMeta      = custo > 0 ? custo * (1 + margem / 100) : null;
+    const diferenca      = precoMeta ? precoVenda - precoMeta : null;
+
+    let situacaoLabel, situacaoClass;
+    if (custo === 0) {
+      situacaoLabel = 'Sem custo'; situacaoClass = 'badge-gray';
+    } else if (precoVenda < custo) {
+      situacaoLabel = 'Prejuízo'; situacaoClass = 'badge-red';
+    } else if (precoVenda < precoMeta) {
+      situacaoLabel = 'Abaixo da meta'; situacaoClass = 'badge-yellow';
+    } else {
+      situacaoLabel = 'OK'; situacaoClass = 'badge-green';
+    }
+
+    const margemCor = margemAtual === null ? 'var(--muted)' : margemAtual < 0 ? 'var(--red)' : margemAtual < margem ? 'var(--yellow)' : 'var(--green)';
+    const diferencaStr = diferenca !== null
+      ? `<br><small style="color:${diferenca>=0?'var(--green)':'var(--red)'}">${diferenca>=0?'+':''}${brl(diferenca)}</small>`
+      : '';
+
+    return `<tr>
+      <td>
+        <strong>${p.nome}</strong>
+        <br><code style="font-size:.72rem;color:var(--muted)">${p.codigo}</code>
+        ${p.tamanho ? `<span class="badge badge-blue" style="font-size:.6rem;margin-left:4px">${p.tamanho}</span>` : ''}
+      </td>
+      <td style="font-weight:700">${custo > 0 ? brl(custo) : '<span style="color:var(--muted)">–</span>'}</td>
+      <td>${brl(precoVenda)}${p.promocao?.ativo ? '<br><span class="badge-promo">PROMO</span>' : ''}</td>
+      <td style="font-weight:700;color:${margemCor}">${margemAtual !== null ? margemAtual.toFixed(1) + '%' : '–'}</td>
+      <td style="font-weight:700;color:var(--brand)">${precoMeta ? brl(precoMeta) : '–'}${diferencaStr}</td>
+      <td><span class="badge ${situacaoClass}">${situacaoLabel}</span></td>
+    </tr>`;
+  }).join('');
 }
 
 function renderClientes() {
