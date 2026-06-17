@@ -850,7 +850,7 @@
         </button>
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Status</th><th>Criado em</th><th>Último login</th><th>Ações</th></tr></thead>
+        <table><thead><tr><th>Nome</th><th>Usuário</th><th>Perfil</th><th>Permissões</th><th>Status</th><th>Último login</th><th>Ações</th></tr></thead>
         <tbody id="tabela-usuarios"></tbody></table>
       </div>
     </div>
@@ -1141,6 +1141,10 @@
       <div class="form-group"><label>Confirmar senha *</label>
         <div class="pw-wrap"><input type="password" id="usr-senha2" placeholder="Repita"><button class="pw-toggle" onclick="togglePw('usr-senha2',this)" type="button">Mostrar</button></div>
       </div>
+    </div>
+    <div class="form-group" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <label style="margin-bottom:10px;display:block">Permissões de Acesso</label>
+      <div id="usr-permissoes" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px"></div>
     </div>
     <div class="form-group"><label>Pergunta de segurança</label>
       <select id="usr-pergunta">
@@ -1438,11 +1442,21 @@ function iniciarApp() {
   document.getElementById('auth-wrap').classList.add('hidden');
 
   const u = sessaoAtual;
+  // carregar permissões do usuário salvo
+  const userObj = usuarios.find(x => x.id === u.id);
+  sessaoAtual.permissoes = userObj?.permissoes || TODAS_PAGINAS;
+  salvarSessao();
+
   document.getElementById('nav-nome').textContent   = u.nome;
   document.getElementById('nav-perfil').textContent = PERFIL_LABEL[u.perfil] || u.perfil;
   document.getElementById('nav-avatar').textContent = u.nome.charAt(0).toUpperCase();
 
-  document.getElementById('nav-usuarios-item').style.display = '';
+  // esconder/mostrar itens do menu conforme permissões
+  const perms = permissoesDoUsuario();
+  const navEls = document.querySelectorAll('.nav-item');
+  NAV_ITEMS.forEach((pg, i) => {
+    if (navEls[i]) navEls[i].style.display = perms.includes(pg) ? '' : 'none';
+  });
 
   navigate('dashboard');
 }
@@ -1453,9 +1467,28 @@ function iniciarApp() {
 const TODAS_PAGINAS = ['dashboard','produtos','estoque','clientes','precificacao','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
 const NAV_ITEMS     = ['dashboard','produtos','estoque','clientes','precificacao','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
 
+const PAGINAS_LABELS = {
+  dashboard:     { label: 'Dashboard',             fixo: true },
+  produtos:      { label: 'Produtos' },
+  estoque:       { label: 'Estoque' },
+  clientes:      { label: 'Clientes' },
+  precificacao:  { label: 'Precificação' },
+  vendas:        { label: 'Nova Venda' },
+  historico:     { label: 'Histórico de Vendas' },
+  trocas:        { label: 'Trocas e Devoluções' },
+  relatorios:    { label: 'Relatórios' },
+  etiquetas:     { label: 'Etiquetas' },
+  calendario:    { label: 'Calendário' },
+  usuarios:      { label: 'Gerenciar Usuários' },
+  'minha-conta': { label: 'Minha Conta',           fixo: true },
+};
+
+function permissoesDoUsuario() {
+  return sessaoAtual?.permissoes || TODAS_PAGINAS;
+}
+
 function navigate(page) {
-  const perfil    = sessaoAtual?.perfil || 'vendedor';
-  const permitido = (PAGINAS_PERMITIDAS[perfil] || []).includes(page);
+  const permitido = permissoesDoUsuario().includes(page);
 
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1472,7 +1505,7 @@ function navigate(page) {
       <div class="acesso-negado">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
         <h3>Acesso não permitido</h3>
-        <p>Seu perfil (${PERFIL_LABEL[perfil]}) não tem permissão para acessar esta página.</p>
+        <p>Você não tem permissão para acessar esta página. Solicite ao administrador.</p>
       </div>`;
     return;
   }
@@ -1552,12 +1585,18 @@ function renderUsuarios() {
   tbody.innerHTML = lista.map(u => {
     const pBadge = u.perfil === 'admin' ? 'badge-orange' : u.perfil === 'operador' ? 'badge-blue' : 'badge-gray';
     const isMe   = u.id === sessaoAtual.id;
+    const perms  = u.permissoes || TODAS_PAGINAS;
+    const totalPerms = TODAS_PAGINAS.filter(pg => !PAGINAS_LABELS[pg]?.fixo).length;
+    const userPerms  = perms.filter(pg => !PAGINAS_LABELS[pg]?.fixo).length;
+    const permsLabel = userPerms === totalPerms
+      ? '<span class="badge badge-green">Acesso total</span>'
+      : `<span class="badge badge-yellow">${userPerms}/${totalPerms} páginas</span>`;
     return `<tr>
       <td><strong>${u.nome}</strong></td>
       <td><code style="font-size:.8rem">${u.usuario}</code></td>
       <td><span class="badge ${pBadge}">${PERFIL_LABEL[u.perfil]}</span></td>
+      <td>${permsLabel}</td>
       <td>${u.ativo ? '<span class="badge badge-green">Ativo</span>' : '<span class="badge badge-red">Inativo</span>'}</td>
-      <td style="font-size:.78rem;color:var(--muted)">${fmtDt(u.criadoEm)}</td>
       <td style="font-size:.78rem;color:var(--muted)">${u.ultimoLogin ? fmtDt(u.ultimoLogin) : '–'}</td>
       <td style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="btn btn-ghost btn-sm" onclick="editarUsuario('${u.id}')">Editar</button>
@@ -1565,6 +1604,20 @@ function renderUsuarios() {
         ${!isMe ? `<button class="btn btn-danger btn-sm" onclick="excluirUsuario('${u.id}')">Excluir</button>` : ''}
       </td>
     </tr>`;
+  }).join('');
+}
+
+function renderPermissoesModal(selecionadas) {
+  const wrap = document.getElementById('usr-permissoes');
+  if (!wrap) return;
+  wrap.innerHTML = TODAS_PAGINAS.map(pg => {
+    const info = PAGINAS_LABELS[pg] || { label: pg };
+    const checked = selecionadas.includes(pg) ? 'checked' : '';
+    const disabled = info.fixo ? 'disabled checked' : '';
+    return `<label style="display:flex;align-items:center;gap:7px;cursor:${info.fixo?'default':'pointer'};font-size:.82rem;font-weight:600;color:${info.fixo?'var(--muted)':'var(--text)'}">
+      <input type="checkbox" name="usr-perm" value="${pg}" ${checked} ${disabled} style="width:auto;accent-color:var(--brand)">
+      ${info.label}${info.fixo?' <span style="font-size:.65rem;color:var(--muted)">(sempre)</span>':''}
+    </label>`;
   }).join('');
 }
 
@@ -1577,6 +1630,7 @@ function abrirModalNovoUsuario() {
   document.getElementById('usr-senha-wrap').style.display = '';
   document.getElementById('usr-usuario').disabled = false;
   clearAuthMsgs('usr-erro');
+  renderPermissoesModal(TODAS_PAGINAS);
   document.getElementById('overlay-novo-usuario').classList.add('open');
 }
 
@@ -1598,6 +1652,7 @@ function editarUsuario(id) {
   document.getElementById('usr-senha2').value   = '';
   document.getElementById('usr-senha-wrap').style.display = 'none';
   clearAuthMsgs('usr-erro');
+  renderPermissoesModal(u.permissoes || TODAS_PAGINAS);
   document.getElementById('overlay-novo-usuario').classList.add('open');
 }
 
@@ -1615,20 +1670,23 @@ async function salvarUsuario() {
   if (!nome || !usr) return showAuthMsg('usr-erro', 'Nome e usuário são obrigatórios.');
   if (/\s/.test(usr)) return showAuthMsg('usr-erro', 'Usuário sem espaços.');
 
+  const permsChecked = [...document.querySelectorAll('#usr-permissoes input[name="usr-perm"]:checked')].map(cb => cb.value);
+  const permissoes = TODAS_PAGINAS.filter(pg => PAGINAS_LABELS[pg]?.fixo || permsChecked.includes(pg));
+
   if (editId) {
     const u = usuarios.find(x => x.id === editId);
-    u.nome = nome; u.perfil = perfil;
+    u.nome = nome; u.perfil = perfil; u.permissoes = permissoes;
     if (pergunta) u.pergunta = pergunta;
     if (resposta) u.respostaHash = await hashSenha(resposta);
     salvarUsuarios();
-    if (sessaoAtual.id === editId) { sessaoAtual.nome = nome; sessaoAtual.perfil = perfil; salvarSessao(); }
+    if (sessaoAtual.id === editId) { sessaoAtual.nome = nome; sessaoAtual.perfil = perfil; sessaoAtual.permissoes = permissoes; salvarSessao(); }
   } else {
     if (!senha || senha.length < 6) return showAuthMsg('usr-erro', 'Senha com mínimo 6 caracteres.');
     if (senha !== senha2)           return showAuthMsg('usr-erro', 'Senhas não coincidem.');
     if (usuarios.find(u => u.usuario.toLowerCase() === usr)) return showAuthMsg('usr-erro', 'Usuário já existe.');
     const hash  = await hashSenha(senha);
     const hashR = resposta ? await hashSenha(resposta) : '';
-    usuarios.push({ id: genId(), nome, usuario: usr, senhaHash: hash, perfil, ativo: true, pergunta: pergunta||'', respostaHash: hashR, criadoEm: agora(), ultimoLogin: null });
+    usuarios.push({ id: genId(), nome, usuario: usr, senhaHash: hash, perfil, permissoes, ativo: true, pergunta: pergunta||'', respostaHash: hashR, criadoEm: agora(), ultimoLogin: null });
     salvarUsuarios();
   }
   fecharModalNovoUsuario();
