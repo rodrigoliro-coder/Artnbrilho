@@ -273,6 +273,22 @@
     .img-upload-wrap:hover { border-color: var(--brand); }
     .img-upload-wrap input { display: none; }
     .img-upload-preview { max-width: 120px; max-height: 100px; border-radius: 6px; margin-top: 8px; display: none; }
+
+    /* ══ PROGRESS BAR ══ */
+    .progress-wrap { background: var(--surface2); border-radius: 20px; height: 12px; overflow: hidden; margin: 8px 0; }
+    .progress-bar { height: 100%; background: linear-gradient(to right, var(--brand), var(--brand-light)); border-radius: 20px; transition: width .4s ease; }
+
+    /* ══ PROMO BADGE ══ */
+    .badge-promo { background: #fde8e6; color: var(--red); font-size: .6rem; padding: 2px 6px; border-radius: 3px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+    .preco-riscado { text-decoration: line-through; color: var(--muted); font-size: .8rem; }
+
+    /* ══ CARNE TABS ══ */
+    .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+    .tab-btn { padding: 9px 20px; font-size: .78rem; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: 'Manrope', sans-serif; }
+    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+
+    /* ══ SIDEBAR BADGE ══ */
+    .nav-badge { background: var(--red); color: #fff; border-radius: 8px; font-size: .6rem; font-weight: 800; padding: 1px 5px; margin-left: auto; }
   </style>
 </head>
 <body>
@@ -467,6 +483,17 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         <span>Estoque</span>
       </div>
+      <div class="nav-item" onclick="navigate('clientes')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M21 15v6m-3-3h6" stroke-width="2.5"/></svg>
+        <span>Clientes</span>
+      </div>
+
+      <div class="nav-label">Financeiro</div>
+      <div class="nav-item" onclick="navigate('carne')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h4m4 0h2"/></svg>
+        <span>Carnê</span>
+        <span class="nav-badge" id="nav-badge-carne" style="display:none">0</span>
+      </div>
 
       <div class="nav-label">Vendas</div>
       <div class="nav-item" onclick="navigate('vendas')">
@@ -476,6 +503,10 @@
       <div class="nav-item" onclick="navigate('historico')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
         <span>Histórico</span>
+      </div>
+      <div class="nav-item" onclick="navigate('trocas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16V4m0 0L3 8m4-4l4 4"/><path d="M17 8v12m0 0l4-4m-4 4l-4-4"/></svg>
+        <span>Trocas/Devol.</span>
       </div>
       <div class="nav-item" onclick="navigate('relatorios')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -526,12 +557,35 @@
         <div class="card blue"><div class="card-label">Produtos Cadastrados</div><div class="card-value" id="card-produtos">0</div><div class="card-sub">itens no catálogo</div></div>
         <div class="card yellow"><div class="card-label">Itens em Estoque</div><div class="card-value" id="card-estoque">0</div><div class="card-sub">unidades totais</div></div>
         <div class="card red"><div class="card-label">Estoque Baixo</div><div class="card-value" id="card-baixo">0</div><div class="card-sub">produtos críticos</div></div>
+        <div class="card"><div class="card-label">Trocas/Devol. (mês)</div><div class="card-value" id="card-trocas-mes">0</div><div class="card-sub">este mês</div></div>
+        <div class="card"><div class="card-label">Carnês Vencidos</div><div class="card-value" id="card-carnes-vencidos">0</div><div class="card-sub">parcelas em atraso</div></div>
       </div>
       <div id="alert-estoque-baixo" style="display:none" class="alert alert-warning">⚠️ Atenção: há produtos com estoque abaixo do mínimo. Verifique a aba <strong>Produtos</strong>.</div>
+      <div id="alert-aniversarios" style="display:none" class="alert" style="background:#fef3e0;border:1px solid #f5dba0;color:var(--yellow)"></div>
+      <div id="alert-carnes-vencidas" style="display:none" class="alert alert-warning"></div>
       <div class="chart-wrap">
         <div class="chart-title">Vendas – últimos 7 dias (R$)</div>
         <div class="bar-chart" id="chart-7dias"></div>
       </div>
+      <!-- META DO MÊS -->
+      <div class="card" style="margin-bottom:24px;padding:22px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div>
+            <div class="card-label">Meta do Mês</div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px">
+              <span class="card-value" id="meta-atual-val" style="font-size:1.5rem">R$ 0,00</span>
+              <span style="color:var(--muted);font-size:.8rem">de <span id="meta-alvo-val">–</span></span>
+              <span class="badge badge-orange" id="meta-pct-badge">0%</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="abrirModalMeta()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Definir Meta
+          </button>
+        </div>
+        <div class="progress-wrap"><div class="progress-bar" id="meta-progress-bar" style="width:0%"></div></div>
+      </div>
+
       <div class="section-title">Últimas Vendas</div>
       <div class="table-wrap">
         <table><thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Pagamento</th></tr></thead>
@@ -603,7 +657,12 @@
         </div>
         <div class="table-wrap" style="padding:20px;background:var(--surface)">
           <h3 style="font-size:.95rem;margin-bottom:16px">Dados do Pedido</h3>
-          <div class="form-group"><label>Cliente</label><input type="text" id="venda-cliente" placeholder="Nome do cliente"></div>
+          <div class="form-group"><label>Cliente</label>
+            <select id="venda-cliente-sel" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:10px 12px;font-family:'Manrope',sans-serif;font-size:.85rem" onchange="syncClienteVenda()">
+              <option value="">Cliente não informado</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Ou informar nome manual</label><input type="text" id="venda-cliente" placeholder="Nome do cliente"></div>
           <div class="form-group"><label>Telefone</label><input type="text" id="venda-telefone" placeholder="(00) 00000-0000"></div>
           <div class="form-group"><label>Forma de Pagamento</label>
             <select id="venda-pagamento"><option>Dinheiro</option><option>PIX</option><option>Cartão de Débito</option><option>Cartão de Crédito</option><option>Boleto</option><option>Fiado</option></select>
@@ -729,6 +788,56 @@
       </div>
     </div>
 
+    <!-- CLIENTES -->
+    <div id="page-clientes" class="page">
+      <div class="page-header"><h2>Clientes</h2><p>Cadastro de clientes da loja</p></div>
+      <div class="toolbar">
+        <input type="text" id="busca-cliente" placeholder="Buscar cliente…" oninput="renderClientes()">
+        <button class="btn btn-primary" onclick="abrirModalCliente()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Cliente
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Nome</th><th>Telefone</th><th>Email</th><th>Aniversário</th><th>Compras</th><th>Ações</th></tr></thead>
+        <tbody id="tabela-clientes"></tbody></table>
+      </div>
+    </div>
+
+    <!-- CARNÊ / CONTAS A RECEBER -->
+    <div id="page-carne" class="page">
+      <div class="page-header"><h2>Carnê / Contas a Receber</h2><p>Controle de pagamentos parcelados</p></div>
+      <div class="toolbar">
+        <div class="tab-bar" style="margin-bottom:0;border:none">
+          <button class="tab-btn active" id="tab-carne-aberto" onclick="filtrarCarne('aberto')">Em Aberto</button>
+          <button class="tab-btn" id="tab-carne-quitado" onclick="filtrarCarne('quitado')">Quitados</button>
+        </div>
+        <button class="btn btn-primary" style="margin-left:auto" onclick="abrirModalCarne()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Carnê
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Cliente</th><th>Descrição</th><th>Total</th><th>Parcelas</th><th>Pago</th><th>Restante</th><th>Próx. Venc.</th><th>Ações</th></tr></thead>
+        <tbody id="tabela-carne"></tbody></table>
+      </div>
+    </div>
+
+    <!-- TROCAS E DEVOLUÇÕES -->
+    <div id="page-trocas" class="page">
+      <div class="page-header"><h2>Trocas e Devoluções</h2><p>Registro de trocas e devoluções de produtos</p></div>
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="abrirModalTroca()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Nova Troca/Devolução
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table><thead><tr><th>Tipo</th><th>Cliente</th><th>Produto</th><th>Qtd</th><th>Valor</th><th>Data</th><th>Motivo</th><th>Ações</th></tr></thead>
+        <tbody id="tabela-trocas"></tbody></table>
+      </div>
+    </div>
+
     <!-- USUÁRIOS (admin) -->
     <div id="page-usuarios" class="page">
       <div class="page-header"><h2>Gerenciar Usuários</h2><p>Controle de acesso ao sistema</p></div>
@@ -830,6 +939,23 @@
       <div class="form-group"><label>Estoque Inicial</label><input type="number" id="prod-estoque" placeholder="0" min="0"></div>
       <div class="form-group"><label>Estoque Mínimo</label><input type="number" id="prod-minimo" placeholder="5" min="0"></div>
     </div>
+    <div class="form-group" style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;text-transform:none;font-size:.85rem;font-weight:600;color:var(--text)">
+        <input type="checkbox" id="prod-promo-ativo" onchange="togglePromo()" style="width:auto;cursor:pointer">
+        Produto em promoção
+      </label>
+    </div>
+    <div id="prod-promo-wrap" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>Tipo de Desconto</label>
+          <select id="prod-promo-tipo">
+            <option value="pct">Percentual (%)</option>
+            <option value="valor">Valor fixo (R$)</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Desconto</label><input type="number" id="prod-promo-desconto" placeholder="0" min="0" step="0.01"></div>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalProduto()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
@@ -860,6 +986,121 @@
         <button class="btn btn-primary" onclick="salvarEvento()">Salvar</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL CLIENTE -->
+<div class="overlay" id="overlay-cliente">
+  <div class="modal" style="max-width:480px">
+    <h3 id="modal-cli-titulo">Novo Cliente</h3>
+    <input type="hidden" id="cli-id">
+    <div class="form-group"><label>Nome *</label><input type="text" id="cli-nome" placeholder="Nome completo"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Telefone</label><input type="text" id="cli-telefone" placeholder="(00) 00000-0000"></div>
+      <div class="form-group"><label>Email</label><input type="email" id="cli-email" placeholder="email@exemplo.com"></div>
+    </div>
+    <div class="form-group"><label>Data de Nascimento</label><input type="date" id="cli-nascimento"></div>
+    <div class="form-group"><label>Observações</label><textarea id="cli-obs" rows="2" placeholder="Notas…"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalCliente()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CARNÊ -->
+<div class="overlay" id="overlay-carne">
+  <div class="modal" style="max-width:520px">
+    <h3 id="modal-carne-titulo">Novo Carnê</h3>
+    <input type="hidden" id="carne-id">
+    <div class="form-group"><label>Cliente *</label>
+      <select id="carne-cliente"><option value="">Selecione o cliente…</option></select>
+    </div>
+    <div class="form-group"><label>Descrição *</label><input type="text" id="carne-descricao" placeholder="Ex: Compra de roupas"></div>
+    <div class="form-row">
+      <div class="form-group"><label>Valor Total (R$) *</label><input type="number" id="carne-total" placeholder="0,00" min="0" step="0.01"></div>
+      <div class="form-group"><label>Nº de Parcelas *</label><input type="number" id="carne-parcelas" placeholder="1" min="1" max="48"></div>
+    </div>
+    <div class="form-group"><label>Data da 1ª Parcela *</label><input type="date" id="carne-data1"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalCarne()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarCarne()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARCELAS DO CARNÊ -->
+<div class="overlay" id="overlay-carne-parcelas">
+  <div class="modal" style="max-width:520px">
+    <h3 id="modal-parcelas-titulo">Parcelas</h3>
+    <div id="carne-parcelas-lista"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalParcelas()">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL TROCA/DEVOLUÇÃO -->
+<div class="overlay" id="overlay-troca">
+  <div class="modal" style="max-width:520px">
+    <h3 id="modal-troca-titulo">Nova Troca/Devolução</h3>
+    <input type="hidden" id="troca-id">
+    <div class="form-group"><label>Tipo *</label>
+      <select id="troca-tipo" onchange="toggleTrocaCampos()">
+        <option value="troca">Troca</option>
+        <option value="devolucao">Devolução</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Cliente</label><input type="text" id="troca-cliente" placeholder="Nome do cliente"></div>
+    <div class="form-group"><label>Produto Devolvido *</label>
+      <select id="troca-produto"><option value="">Selecione o produto…</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Quantidade *</label><input type="number" id="troca-qty" value="1" min="1"></div>
+      <div class="form-group"><label>Valor (R$)</label><input type="number" id="troca-valor" placeholder="0,00" min="0" step="0.01"></div>
+    </div>
+    <div class="form-group"><label>Motivo *</label>
+      <select id="troca-motivo">
+        <option value="Tamanho errado">Tamanho errado</option>
+        <option value="Defeito">Defeito</option>
+        <option value="Desistência">Desistência</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Observações</label><textarea id="troca-obs" rows="2" placeholder="Detalhes…"></textarea></div>
+    <div id="troca-novo-produto-wrap" class="form-group">
+      <label>Produto de Troca (novo produto)</label>
+      <select id="troca-novo-produto"><option value="">Selecione o produto de troca…</option></select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalTroca()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarTroca()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL META -->
+<div class="overlay" id="overlay-meta">
+  <div class="modal" style="max-width:380px">
+    <h3>Definir Meta do Mês</h3>
+    <div class="form-group"><label>Meta de Faturamento (R$)</label><input type="number" id="meta-valor" placeholder="0,00" min="0" step="0.01"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalMeta()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarMeta()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL WHATSAPP PÓS-VENDA -->
+<div class="overlay" id="overlay-whatsapp">
+  <div class="modal" style="max-width:400px;text-align:center">
+    <h3>Venda Registrada!</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin-bottom:20px" id="wpp-venda-info"></p>
+    <button class="btn btn-success" style="width:100%;margin-bottom:10px" onclick="enviarWhatsApp()">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Compartilhar no WhatsApp
+    </button>
+    <button class="btn btn-ghost" style="width:100%" onclick="fecharModalWhatsApp()">Fechar</button>
   </div>
 </div>
 
@@ -927,11 +1168,17 @@ let movimentos = JSON.parse(localStorage.getItem('ab_movimentos') || '[]');
 let vendas     = JSON.parse(localStorage.getItem('ab_vendas')     || '[]');
 let usuarios   = JSON.parse(localStorage.getItem('ab_usuarios')   || '[]');
 let eventos    = JSON.parse(localStorage.getItem('ab_eventos')    || '[]');
+let clientes   = JSON.parse(localStorage.getItem('ab_clientes')   || '[]');
+let carnes     = JSON.parse(localStorage.getItem('ab_carnes')     || '[]');
+let trocas     = JSON.parse(localStorage.getItem('ab_trocas')     || '[]');
+let metas      = JSON.parse(localStorage.getItem('ab_metas')      || '{}');
 let sessaoAtual = JSON.parse(sessionStorage.getItem('ab_sessao')  || 'null');
 let carrinhoVenda = [];
 let editandoProdutoId = null;
 let calAno = new Date().getFullYear();
 let calMes = new Date().getMonth();
+let filtroCarneAtual = 'aberto';
+let vendaParaWhatsApp = null;
 
 // ═══════════════════════════════════════════════════
 //  UTIL
@@ -941,6 +1188,10 @@ const salvarMovimentos = () => localStorage.setItem('ab_movimentos', JSON.string
 const salvarVendas     = () => localStorage.setItem('ab_vendas',     JSON.stringify(vendas));
 const salvarUsuarios   = () => localStorage.setItem('ab_usuarios',   JSON.stringify(usuarios));
 const salvarEventos    = () => localStorage.setItem('ab_eventos',    JSON.stringify(eventos));
+const salvarClientes   = () => localStorage.setItem('ab_clientes',   JSON.stringify(clientes));
+const salvarCarnes     = () => localStorage.setItem('ab_carnes',     JSON.stringify(carnes));
+const salvarTrocas     = () => localStorage.setItem('ab_trocas',     JSON.stringify(trocas));
+const salvarMetas      = () => localStorage.setItem('ab_metas',      JSON.stringify(metas));
 const salvarSessao     = () => sessaoAtual
   ? sessionStorage.setItem('ab_sessao', JSON.stringify(sessaoAtual))
   : sessionStorage.removeItem('ab_sessao');
@@ -977,8 +1228,8 @@ function clearAuthMsgs(...ids) {
 const PERFIL_LABEL = { admin: 'Administrador', operador: 'Operador', vendedor: 'Vendedor' };
 
 const PAGINAS_PERMITIDAS = {
-  admin:    ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','usuarios','minha-conta'],
-  operador: ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','minha-conta'],
+  admin:    ['dashboard','produtos','estoque','clientes','carne','etiquetas','vendas','historico','trocas','relatorios','calendario','usuarios','minha-conta'],
+  operador: ['dashboard','produtos','estoque','clientes','carne','etiquetas','vendas','historico','trocas','relatorios','calendario','minha-conta'],
   vendedor: ['dashboard','vendas','historico','minha-conta'],
 };
 
@@ -1198,8 +1449,8 @@ function iniciarApp() {
 // ═══════════════════════════════════════════════════
 //  NAVEGAÇÃO
 // ═══════════════════════════════════════════════════
-const TODAS_PAGINAS = ['dashboard','produtos','estoque','vendas','historico','relatorios','etiquetas','calendario','usuarios','minha-conta'];
-const NAV_ITEMS     = ['dashboard','produtos','estoque','vendas','historico','relatorios','etiquetas','calendario','usuarios','minha-conta'];
+const TODAS_PAGINAS = ['dashboard','produtos','estoque','clientes','carne','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
+const NAV_ITEMS     = ['dashboard','produtos','estoque','clientes','carne','vendas','historico','trocas','relatorios','etiquetas','calendario','usuarios','minha-conta'];
 
 function navigate(page) {
   const perfil    = sessaoAtual?.perfil || 'vendedor';
@@ -1229,9 +1480,12 @@ function navigate(page) {
     dashboard:    renderDashboard,
     produtos:     renderProdutos,
     estoque:      () => { renderEstoqueInventario(); populateSelects(); renderMovimentos(); },
+    clientes:     renderClientes,
+    carne:        () => { renderCarne(); populateCarneClientes(); },
     etiquetas:    renderEtiquetas,
-    vendas:       () => { populateSelects(); calcularTotal(); },
+    vendas:       () => { populateSelects(); populateVendaClientes(); calcularTotal(); },
     historico:    renderHistorico,
+    trocas:       () => { renderTrocas(); populateTrocaProdutos(); },
     relatorios:   renderRelatorios,
     calendario:   renderCalendario,
     usuarios:     renderUsuarios,
@@ -1442,6 +1696,11 @@ function abrirModalProduto(id = null) {
     el('prod-imagem').value = p.imagem||'';
     if (p.imagem) { prev.src = p.imagem; prev.style.display='block'; el('img-upload-hint').style.display='none'; }
     else { prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display=''; }
+    const pr=p.promocao||{};
+    el('prod-promo-ativo').checked=!!(p.promocao&&p.promocao.ativo);
+    el('prod-promo-wrap').style.display=(p.promocao&&p.promocao.ativo)?'':'none';
+    el('prod-promo-tipo').value=pr.tipo||'pct';
+    el('prod-promo-desconto').value=pr.desconto||'';
   } else {
     el('modal-prod-titulo').textContent = 'Novo Produto';
     ['prod-id','prod-nome','prod-modelo','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque','prod-imagem'].forEach(f=>el(f).value='');
@@ -1450,6 +1709,8 @@ function abrirModalProduto(id = null) {
     el('prod-minimo').value='5'; el('prod-estoque').value='0';
     prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display='';
     el('prod-imagem-file').value='';
+    el('prod-promo-ativo').checked=false; el('prod-promo-wrap').style.display='none';
+    el('prod-promo-tipo').value='pct'; el('prod-promo-desconto').value='';
   }
   document.getElementById('overlay-produto').classList.add('open');
 }
@@ -1463,11 +1724,15 @@ function salvarProduto() {
   if (editandoProdutoId) {
     const p = produtos.find(x=>x.id===editandoProdutoId);
     const diff = estoqueQty - p.estoque;
-    Object.assign(p,{codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem});
+    const promoAtivaE=document.getElementById('prod-promo-ativo').checked;
+    const promoObjE=promoAtivaE?{ativo:true,tipo:document.getElementById('prod-promo-tipo').value,desconto:parseFloat(document.getElementById('prod-promo-desconto').value)||0}:null;
+    Object.assign(p,{codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem,promocao:promoObjE});
     if(diff!==0) registrarMovimentoInterno(editandoProdutoId,'ajuste',Math.abs(diff),diff>=0?'Ajuste positivo (edição)':'Ajuste negativo (edição)',estoqueQty-diff);
   } else {
     const novoId=genId();
-    produtos.push({id:novoId,codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem,criadoEm:agora()});
+    const promoAtiva=document.getElementById('prod-promo-ativo').checked;
+    const promoObj=promoAtiva?{ativo:true,tipo:document.getElementById('prod-promo-tipo').value,desconto:parseFloat(document.getElementById('prod-promo-desconto').value)||0}:null;
+    produtos.push({id:novoId,codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem,promocao:promoObj,criadoEm:agora()});
     if(estoqueQty>0) registrarMovimentoInterno(novoId,'entrada',estoqueQty,'Estoque inicial',0);
   }
   salvarProdutos(); fecharModalProduto(); renderProdutos();
@@ -1493,7 +1758,7 @@ function renderProdutos() {
       <td><strong>${p.nome}</strong>${p.descricao?`<br><small style="color:var(--muted)">${p.descricao}</small>`:''}</td>
       <td style="color:var(--muted);font-size:.83rem">${p.modelo||'–'}</td>
       <td>${p.categoria}</td><td><span class="badge badge-blue">${p.tamanho}</span></td>
-      <td>${p.cor||'–'}</td><td>${brl(p.preco)}</td>
+      <td>${p.cor||'–'}</td><td>${(p.promocao&&p.promocao.ativo)?`<span class="preco-riscado">${brl(p.preco)}</span> <strong style="color:var(--red)">${brl(precoEfetivo(p))}</strong> <span class="badge-promo">PROMO</span>`:brl(p.preco)}</td>
       <td style="font-weight:700;color:${p.estoque<=p.minimo?'var(--red)':'var(--green)'}">${p.estoque}</td>
       <td>${sb}</td>
       <td style="display:flex;gap:6px">
@@ -1508,8 +1773,36 @@ function renderProdutos() {
 //  ESTOQUE
 // ═══════════════════════════════════════════════════
 function populateSelects() {
-  const opts=produtos.map(p=>`<option value="${p.id}">${p.codigo} – ${p.nome} (${p.tamanho}${p.cor?'/'+p.cor:''}) [${p.estoque} un]</option>`).join('');
+  const opts=produtos.map(p=>`<option value="${p.id}">${p.codigo} – ${p.nome} (${p.tamanho}${p.cor?'/'+p.cor:''}) [${p.estoque} un]${(p.promocao&&p.promocao.ativo)?' 🏷️ PROMO':''}</option>`).join('');
   ['mov-produto','venda-produto'].forEach(sel=>{const el=document.getElementById(sel);if(el)el.innerHTML='<option value="">Selecione o produto…</option>'+opts;});
+}
+
+function populateVendaClientes() {
+  const sel=document.getElementById('venda-cliente-sel');
+  if(!sel) return;
+  sel.innerHTML='<option value="">Cliente não informado</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}${c.telefone?' – '+c.telefone:''}</option>`).join('');
+}
+
+function populateCarneClientes() {
+  const sel=document.getElementById('carne-cliente');
+  if(!sel) return;
+  sel.innerHTML='<option value="">Selecione o cliente…</option>'+clientes.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('');
+}
+
+function populateTrocaProdutos() {
+  const opts='<option value="">Selecione o produto…</option>'+produtos.map(p=>`<option value="${p.id}">${p.codigo} – ${p.nome} (${p.tamanho})</option>`).join('');
+  ['troca-produto','troca-novo-produto'].forEach(sel=>{const el=document.getElementById(sel);if(el)el.innerHTML=opts;});
+}
+
+function precoEfetivo(p) {
+  if(!p.promocao||!p.promocao.ativo||!p.promocao.desconto) return p.preco;
+  if(p.promocao.tipo==='pct') return Math.max(0,p.preco*(1-p.promocao.desconto/100));
+  return Math.max(0,p.preco-p.promocao.desconto);
+}
+
+function togglePromo() {
+  const ativo=document.getElementById('prod-promo-ativo').checked;
+  document.getElementById('prod-promo-wrap').style.display=ativo?'':'none';
 }
 
 function registrarMovimentoInterno(prodId,tipo,qty,obs,saldoAntes) {
@@ -1561,7 +1854,7 @@ function adicionarItemVenda() {
   if(prod.estoque<qty){alert('Estoque insuficiente! Disponível: '+prod.estoque);return;}
   const ex=carrinhoVenda.find(i=>i.prodId===prodId);
   if(ex){if(prod.estoque<ex.qty+qty){alert('Estoque insuficiente!');return;}ex.qty+=qty;}
-  else carrinhoVenda.push({prodId,nome:prod.nome+(prod.tamanho!=='Único'?' '+prod.tamanho:'')+(prod.cor?'/'+prod.cor:''),preco:prod.preco,qty});
+  else carrinhoVenda.push({prodId,nome:prod.nome+(prod.tamanho!=='Único'?' '+prod.tamanho:'')+(prod.cor?'/'+prod.cor:''),preco:precoEfetivo(prod),qty});
   renderCarrinho();
 }
 
@@ -1595,8 +1888,19 @@ function calcularTotal() {
   if(a)a.textContent=`Total: ${brl(total)}`;if(b)b.textContent=`Total: ${brl(total)}`;
 }
 
+function syncClienteVenda() {
+  const sel=document.getElementById('venda-cliente-sel');
+  const inp=document.getElementById('venda-cliente');
+  if(sel&&sel.value) {
+    const c=clientes.find(x=>x.id===sel.value);
+    if(c){inp.value=c.nome;const tel=document.getElementById('venda-telefone');if(tel&&c.telefone)tel.value=c.telefone;}
+  }
+}
+
 function finalizarVenda() {
   if(!carrinhoVenda.length){alert('Adicione ao menos um item.');return;}
+  const selCli=document.getElementById('venda-cliente-sel');
+  const clienteId=selCli&&selCli.value?selCli.value:null;
   const cliente=document.getElementById('venda-cliente').value.trim()||'Consumidor';
   const telefone=document.getElementById('venda-telefone').value.trim();
   const pagamento=document.getElementById('venda-pagamento').value;
@@ -1609,9 +1913,12 @@ function finalizarVenda() {
     prod.estoque-=item.qty;registrarMovimentoInterno(item.prodId,'saida',item.qty,`Venda #${vendas.length+1}`,antes);
   });
   salvarProdutos();salvarMovimentos();
-  const v={id:genId(),num:vendas.length+1,data:agora(),cliente,telefone,pagamento,obs,itens:carrinhoVenda.map(i=>({...i})),subtotal,desconto,total,cancelada:false,operador:sessaoAtual?.nome||'–'};
+  const v={id:genId(),num:vendas.length+1,data:agora(),cliente,clienteId,telefone,pagamento,obs,itens:carrinhoVenda.map(i=>({...i})),subtotal,desconto,total,cancelada:false,operador:sessaoAtual?.nome||'–'};
   vendas.unshift(v);salvarVendas();
-  alert(`Venda #${v.num} registrada!\nTotal: ${brl(total)}`);limparVenda();
+  vendaParaWhatsApp=v;
+  document.getElementById('wpp-venda-info').textContent=`Venda #${v.num} – ${brl(total)} – ${cliente}`;
+  document.getElementById('overlay-whatsapp').classList.add('open');
+  limparVenda();
 }
 
 function limparVenda() {
@@ -1640,9 +1947,25 @@ function renderHistorico() {
       <td>${v.desconto>0?brl(v.desconto):'–'}</td>
       <td style="font-weight:700;color:var(--green)">${brl(v.total)}</td>
       <td><span class="badge badge-blue">${v.pagamento}</span></td>
-      <td><button class="btn btn-ghost btn-sm" onclick="verVenda('${v.id}')">Ver</button></td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="verVenda('${v.id}')">Ver</button><button class="btn btn-ghost btn-sm" style="color:#25d366" onclick="compartilharWhatsApp('${v.id}')">WhatsApp</button></td>
     </tr>`).join('');
 }
+
+function compartilharWhatsApp(vendaId) {
+  const v=vendas.find(x=>x.id===vendaId);
+  if(v){vendaParaWhatsApp=v;document.getElementById('wpp-venda-info').textContent=`Venda #${v.num} – ${brl(v.total)} – ${v.cliente}`;document.getElementById('overlay-whatsapp').classList.add('open');}
+}
+
+function enviarWhatsApp() {
+  if(!vendaParaWhatsApp)return;
+  const v=vendaParaWhatsApp;
+  const dt=new Date(v.data).toLocaleDateString('pt-BR');
+  const linhas=v.itens.map(i=>`${i.nome} x${i.qty} – ${brl(i.preco*i.qty)}`).join('\n');
+  const msg=`🛍️ *Artnbrilho*\nPedido #${v.num} – ${dt}\n\nCliente: ${v.cliente}\n${linhas}\n*Total: ${brl(v.total)}*\nPagamento: ${v.pagamento}\n\nObrigada pela preferência! ✨`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+function fecharModalWhatsApp(){document.getElementById('overlay-whatsapp').classList.remove('open');}
 
 function verVenda(id) {
   const v=vendas.find(x=>x.id===id);
@@ -1697,6 +2020,45 @@ function renderDashboard() {
   document.getElementById('card-estoque').textContent=estTot;
   document.getElementById('card-baixo').textContent=baixo;
   document.getElementById('alert-estoque-baixo').style.display=baixo>0?'':'none';
+
+  // Aniversários (hoje + 3 dias)
+  const hjDate=new Date(hj+'T00:00:00');
+  const anivs=clientes.filter(c=>{
+    if(!c.nascimento)return false;
+    const [,mm,dd]=c.nascimento.split('-');
+    for(let i=0;i<4;i++){const d=new Date(hjDate);d.setDate(d.getDate()+i);if(String(d.getMonth()+1).padStart(2,'0')===mm&&String(d.getDate()).padStart(2,'0')===dd)return true;}
+    return false;
+  });
+  const alAniv=document.getElementById('alert-aniversarios');
+  if(anivs.length){alAniv.style.display='';alAniv.style.cssText='display:block;background:#fef3e0;border:1px solid #f5dba0;color:var(--yellow);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:.82rem;font-weight:600';alAniv.textContent='🎂 Aniversário(s): '+anivs.map(c=>{const[,mm,dd]=c.nascimento.split('-');const dt=`${dd}/${mm}`;return `${c.nome} (${dt})`;}).join(', ');}
+  else alAniv.style.display='none';
+
+  // Trocas do mês
+  const trocasMes=trocas.filter(t=>t.criadoEm&&t.criadoEm.slice(0,7)===mes).length;
+  const cardTrocas=document.getElementById('card-trocas-mes');if(cardTrocas)cardTrocas.textContent=trocasMes;
+
+  // Carnês vencidos
+  const hjStr=hj;
+  let vencidas=0;
+  carnes.forEach(c=>c.parcela.forEach(p=>{if(!p.pago&&p.vencimento<hjStr)vencidas++;}));
+  const cardCarnes=document.getElementById('card-carnes-vencidos');if(cardCarnes)cardCarnes.textContent=vencidas;
+  const alCarnes=document.getElementById('alert-carnes-vencidas');
+  if(alCarnes){if(vencidas>0){alCarnes.style.display='';alCarnes.textContent=`⚠️ ${vencidas} parcela${vencidas!==1?'s':''} de carnê vencida${vencidas!==1?'s':''}. Verifique a aba Carnê.`;}else alCarnes.style.display='none';}
+  // Atualizar badge do carnê na sidebar
+  const badge=document.getElementById('nav-badge-carne');
+  if(badge){badge.style.display=vencidas>0?'':'none';badge.textContent=vencidas;}
+
+  // Meta do mês
+  const meta=metas[mes]||0;
+  const metaEl=document.getElementById('meta-alvo-val');
+  const metaAtualEl=document.getElementById('meta-atual-val');
+  const metaPctEl=document.getElementById('meta-pct-badge');
+  const metaBar=document.getElementById('meta-progress-bar');
+  if(metaEl)metaEl.textContent=meta>0?brl(meta):'Não definida';
+  if(metaAtualEl)metaAtualEl.textContent=brl(tMes);
+  const pct=meta>0?Math.min(100,Math.round(tMes/meta*100)):0;
+  if(metaPctEl)metaPctEl.textContent=pct+'%';
+  if(metaBar)metaBar.style.width=pct+'%';
 
   const chart=document.getElementById('chart-7dias');const dias=[];
   for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const iso=d.toISOString().slice(0,10);const tot=vendas.filter(v=>!v.cancelada&&v.data.slice(0,10)===iso).reduce((s,v)=>s+v.total,0);dias.push({label:d.toLocaleDateString('pt-BR',{weekday:'short'}),val:tot});}
@@ -1935,6 +2297,322 @@ function excluirEvento(){
 }
 
 function fecharModalEvento(){document.getElementById('overlay-evento').classList.remove('open');}
+
+// ═══════════════════════════════════════════════════
+//  CLIENTES
+// ═══════════════════════════════════════════════════
+let editandoClienteId = null;
+
+function abrirModalCliente(id = null) {
+  editandoClienteId = id;
+  const el = v => document.getElementById(v);
+  if (id) {
+    const c = clientes.find(x => x.id === id);
+    el('modal-cli-titulo').textContent = 'Editar Cliente';
+    el('cli-id').value = c.id;
+    el('cli-nome').value = c.nome;
+    el('cli-telefone').value = c.telefone||'';
+    el('cli-email').value = c.email||'';
+    el('cli-nascimento').value = c.nascimento||'';
+    el('cli-obs').value = c.obs||'';
+  } else {
+    el('modal-cli-titulo').textContent = 'Novo Cliente';
+    ['cli-id','cli-nome','cli-telefone','cli-email','cli-nascimento','cli-obs'].forEach(f=>el(f).value='');
+  }
+  document.getElementById('overlay-cliente').classList.add('open');
+}
+
+function fecharModalCliente() { document.getElementById('overlay-cliente').classList.remove('open'); }
+
+function salvarCliente() {
+  const v = id => document.getElementById(id).value.trim();
+  if (!v('cli-nome')) { alert('Informe o nome do cliente.'); return; }
+  if (editandoClienteId) {
+    const c = clientes.find(x => x.id === editandoClienteId);
+    Object.assign(c, { nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs') });
+  } else {
+    clientes.push({ id:genId(), nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs'), criadoEm:agora() });
+  }
+  salvarClientes(); fecharModalCliente(); renderClientes();
+}
+
+function excluirCliente(id) {
+  if (!confirm('Excluir este cliente?')) return;
+  clientes = clientes.filter(c => c.id !== id); salvarClientes(); renderClientes();
+}
+
+function renderClientes() {
+  const busca = (document.getElementById('busca-cliente').value||'').toLowerCase();
+  const tbody = document.getElementById('tabela-clientes');
+  const filtrados = clientes.filter(c => !busca || c.nome.toLowerCase().includes(busca) || (c.telefone||'').includes(busca));
+  if (!filtrados.length) { tbody.innerHTML=`<tr><td colspan="6" style="padding:36px;text-align:center;color:var(--muted)">Nenhum cliente cadastrado.</td></tr>`; return; }
+  const hoje2 = new Date();
+  tbody.innerHTML = filtrados.map(c => {
+    const compras = vendas.filter(v => v.clienteId === c.id).length;
+    let anivBadge = '';
+    if (c.nascimento) {
+      const d = new Date(c.nascimento + 'T00:00:00');
+      const anivEsteAno = new Date(hoje2.getFullYear(), d.getMonth(), d.getDate());
+      const diff = Math.round((anivEsteAno - hoje2) / 86400000);
+      if (diff >= 0 && diff <= 7) anivBadge = `<span class="badge badge-orange" style="margin-left:4px">🎂 ${diff===0?'Hoje':diff+'d'}</span>`;
+    }
+    return `<tr>
+      <td><strong>${c.nome}</strong></td>
+      <td>${c.telefone||'–'}</td>
+      <td style="color:var(--muted);font-size:.82rem">${c.email||'–'}</td>
+      <td>${c.nascimento ? new Date(c.nascimento+'T00:00:00').toLocaleDateString('pt-BR') : '–'}${anivBadge}</td>
+      <td><span class="badge badge-blue">${compras}</span></td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalCliente('${c.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCliente('${c.id}')">Excluir</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function popularSelectClientes(selectId, selecionado='') {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Cliente não informado</option>' +
+    clientes.map(c => `<option value="${c.id}" ${c.id===selecionado?'selected':''}>${c.nome}</option>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  CARNÊ / CONTAS A RECEBER
+// ═══════════════════════════════════════════════════
+let editandoCarneId = null;
+
+function filtrarCarne(tipo) {
+  filtroCarneAtual = tipo;
+  document.getElementById('tab-carne-aberto').classList.toggle('active', tipo==='aberto');
+  document.getElementById('tab-carne-quitado').classList.toggle('active', tipo==='quitado');
+  renderCarne();
+}
+
+function abrirModalCarne(id = null) {
+  editandoCarneId = id;
+  populateCarneClientes();
+  const el = v => document.getElementById(v);
+  if (id) {
+    const c = carnes.find(x => x.id === id);
+    el('modal-carne-titulo').textContent = 'Editar Carnê';
+    el('carne-id').value = c.id;
+    el('carne-cliente').value = c.clienteId||'';
+    el('carne-descricao').value = c.descricao;
+    el('carne-total').value = c.total;
+    el('carne-parcelas').value = c.parcela.length;
+    el('carne-data1').value = c.parcela[0]?.vencimento||'';
+  } else {
+    el('modal-carne-titulo').textContent = 'Novo Carnê';
+    ['carne-id','carne-descricao','carne-total','carne-parcelas','carne-data1'].forEach(f=>el(f).value='');
+    el('carne-cliente').value = '';
+    const d = new Date(); d.setMonth(d.getMonth()+1);
+    el('carne-data1').value = d.toISOString().slice(0,10);
+  }
+  document.getElementById('overlay-carne').classList.add('open');
+}
+
+function fecharModalCarne() { document.getElementById('overlay-carne').classList.remove('open'); }
+
+function salvarCarne() {
+  const v = id => document.getElementById(id).value.trim();
+  const clienteId = document.getElementById('carne-cliente').value;
+  const clienteNome = clienteId ? (clientes.find(c=>c.id===clienteId)?.nome||'') : 'Não informado';
+  const total = parseFloat(v('carne-total'))||0;
+  const nParcelas = parseInt(v('carne-parcelas'))||1;
+  const data1Str = v('carne-data1');
+  if (!v('carne-descricao')||!total||!data1Str) { alert('Preencha descrição, valor e data da 1ª parcela.'); return; }
+  const valorParc = Math.round((total / nParcelas) * 100) / 100;
+  const parcela = Array.from({length: nParcelas}, (_,i) => {
+    const d = new Date(data1Str + 'T00:00:00');
+    d.setMonth(d.getMonth() + i);
+    return { num: i+1, vencimento: d.toISOString().slice(0,10), valor: valorParc, pago: false, pagaEm: null };
+  });
+  if (editandoCarneId) {
+    const c = carnes.find(x=>x.id===editandoCarneId);
+    Object.assign(c, { clienteId, clienteNome, descricao:v('carne-descricao'), total, parcela });
+  } else {
+    carnes.push({ id:genId(), clienteId, clienteNome, descricao:v('carne-descricao'), total, parcela, criadoEm:agora() });
+  }
+  salvarCarnes(); fecharModalCarne(); renderCarne(); atualizarBadgeCarne();
+}
+
+function excluirCarne(id) {
+  if (!confirm('Excluir este carnê?')) return;
+  carnes = carnes.filter(c=>c.id!==id); salvarCarnes(); renderCarne(); atualizarBadgeCarne();
+}
+
+function verParcelas(id) {
+  const c = carnes.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById('modal-parcelas-titulo').textContent = `Parcelas – ${c.clienteNome}`;
+  document.getElementById('carne-parcelas-lista').innerHTML = `
+    <table style="width:100%"><thead><tr><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Status</th><th>Ação</th></tr></thead>
+    <tbody>${c.parcela.map((p,i)=>`<tr>
+      <td>#${p.num}</td>
+      <td style="font-size:.82rem">${new Date(p.vencimento+'T00:00:00').toLocaleDateString('pt-BR')}</td>
+      <td>${brl(p.valor)}</td>
+      <td>${p.pago
+        ? `<span class="badge badge-green">Pago em ${new Date(p.pagaEm+'T00:00:00').toLocaleDateString('pt-BR')}</span>`
+        : new Date(p.vencimento+'T00:00:00') < new Date() ? '<span class="badge badge-red">Vencida</span>' : '<span class="badge badge-yellow">Pendente</span>'}
+      </td>
+      <td>${!p.pago?`<button class="btn btn-success btn-sm" onclick="pagarParcela('${id}',${i})">Pagar</button>`:''}</td>
+    </tr>`).join('')}</tbody></table>`;
+  document.getElementById('overlay-carne-parcelas').classList.add('open');
+}
+
+function fecharModalParcelas() { document.getElementById('overlay-carne-parcelas').classList.remove('open'); }
+
+function pagarParcela(carneId, idx) {
+  const c = carnes.find(x=>x.id===carneId);
+  if (!c) return;
+  c.parcela[idx].pago = true;
+  c.parcela[idx].pagaEm = new Date().toISOString().slice(0,10);
+  salvarCarnes(); verParcelas(carneId); renderCarne(); atualizarBadgeCarne();
+}
+
+function renderCarne() {
+  const tbody = document.getElementById('tabela-carne');
+  const hoje3 = new Date(); hoje3.setHours(0,0,0,0);
+  const filtrados = carnes.filter(c => {
+    const quitado = c.parcela.every(p=>p.pago);
+    return filtroCarneAtual === 'quitado' ? quitado : !quitado;
+  });
+  if (!filtrados.length) { tbody.innerHTML=`<tr><td colspan="8" style="padding:36px;text-align:center;color:var(--muted)">Nenhum registro encontrado.</td></tr>`; return; }
+  tbody.innerHTML = filtrados.map(c => {
+    const totalPago = c.parcela.filter(p=>p.pago).reduce((s,p)=>s+p.valor,0);
+    const restante = c.total - totalPago;
+    const proxVenc = c.parcela.filter(p=>!p.pago).sort((a,b)=>a.vencimento.localeCompare(b.vencimento))[0];
+    const proxStr = proxVenc ? new Date(proxVenc.vencimento+'T00:00:00').toLocaleDateString('pt-BR') : '–';
+    const vencida = proxVenc && new Date(proxVenc.vencimento+'T00:00:00') < hoje3;
+    return `<tr>
+      <td><strong>${c.clienteNome}</strong></td>
+      <td style="font-size:.83rem">${c.descricao}</td>
+      <td>${brl(c.total)}</td>
+      <td>${c.parcela.length}× ${brl(c.parcela[0]?.valor||0)}</td>
+      <td style="color:var(--green);font-weight:700">${brl(totalPago)}</td>
+      <td style="color:${restante>0?'var(--red)':'var(--green)'};font-weight:700">${brl(restante)}</td>
+      <td>${proxVenc?`<span class="${vencida?'badge badge-red':'badge badge-yellow'}">${proxStr}</span>`:'<span class="badge badge-green">Quitado</span>'}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-ghost btn-sm" onclick="verParcelas('${c.id}')">Parcelas</button>
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalCarne('${c.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirCarne('${c.id}')">Excluir</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function atualizarBadgeCarne() {
+  const hjStr = hoje();
+  const vencidas = carnes.reduce((s,c) => s + c.parcela.filter(p=>!p.pago && p.vencimento < hjStr).length, 0);
+  const badge = document.getElementById('nav-badge-carne');
+  if (badge) { badge.textContent = vencidas; badge.style.display = vencidas>0?'':'none'; }
+}
+
+// ═══════════════════════════════════════════════════
+//  TROCAS E DEVOLUÇÕES
+// ═══════════════════════════════════════════════════
+function abrirModalTroca() {
+  const el = v => document.getElementById(v);
+  el('troca-id').value=''; el('troca-cliente').value=''; el('troca-qty').value=1; el('troca-valor').value=''; el('troca-obs').value='';
+  el('troca-tipo').value='troca'; el('troca-motivo').value='Tamanho errado';
+  const opts = '<option value="">Selecione…</option>' + produtos.map(p=>`<option value="${p.id}">${p.codigo} – ${p.nome} (${p.tamanho})</option>`).join('');
+  el('troca-produto').innerHTML = opts;
+  el('troca-novo-produto').innerHTML = opts;
+  el('troca-novo-produto-wrap').style.display='';
+  document.getElementById('overlay-troca').classList.add('open');
+}
+
+function fecharModalTroca() { document.getElementById('overlay-troca').classList.remove('open'); }
+
+function toggleTrocaCampos() {
+  const tipo = document.getElementById('troca-tipo').value;
+  document.getElementById('troca-novo-produto-wrap').style.display = tipo==='troca' ? '' : 'none';
+}
+
+function salvarTroca() {
+  const v = id => document.getElementById(id).value.trim();
+  const prodId = document.getElementById('troca-produto').value;
+  const qty = parseInt(document.getElementById('troca-qty').value)||1;
+  if (!prodId) { alert('Selecione o produto devolvido.'); return; }
+  const prod = produtos.find(p=>p.id===prodId);
+  if (!prod) return;
+  const tipo = v('troca-tipo');
+  const novoProdId = tipo==='troca' ? document.getElementById('troca-novo-produto').value : '';
+  const novoProd = novoProdId ? produtos.find(p=>p.id===novoProdId) : null;
+  prod.estoque += qty;
+  registrarMovimentoInterno(prod.id, 'entrada', qty, `${tipo==='troca'?'Troca':'Devolução'} – ${v('troca-motivo')}`, prod.estoque - qty);
+  if (novoProd && qty > 0) {
+    novoProd.estoque = Math.max(0, novoProd.estoque - qty);
+    registrarMovimentoInterno(novoProd.id, 'saida', qty, 'Saída por troca', novoProd.estoque + qty);
+  }
+  salvarProdutos();
+  trocas.push({
+    id: genId(), tipo, clienteNome: v('troca-cliente')||'Não informado',
+    produtoNome: prod.nome, produtoCodigo: prod.codigo, qty,
+    valor: parseFloat(v('troca-valor'))||0, motivo: v('troca-motivo'), obs: v('troca-obs'),
+    novoProdutoNome: novoProd?.nome||'', criadoEm: agora()
+  });
+  salvarTrocas(); fecharModalTroca(); renderTrocas();
+}
+
+function excluirTroca(id) {
+  if (!confirm('Excluir este registro?')) return;
+  trocas = trocas.filter(t=>t.id!==id); salvarTrocas(); renderTrocas();
+}
+
+function renderTrocas() {
+  const tbody = document.getElementById('tabela-trocas');
+  if (!trocas.length) { tbody.innerHTML=`<tr><td colspan="8" style="padding:36px;text-align:center;color:var(--muted)">Nenhum registro de troca ou devolução.</td></tr>`; return; }
+  tbody.innerHTML = [...trocas].reverse().map(t=>`<tr>
+    <td><span class="badge ${t.tipo==='troca'?'badge-blue':'badge-yellow'}">${t.tipo==='troca'?'Troca':'Devolução'}</span></td>
+    <td>${t.clienteNome}</td>
+    <td><strong>${t.produtoNome}</strong><br><code style="font-size:.72rem;color:var(--muted)">${t.produtoCodigo}</code>${t.novoProdutoNome?`<br><small style="color:var(--green)">→ ${t.novoProdutoNome}</small>`:''}</td>
+    <td>${t.qty}</td>
+    <td>${t.valor>0?brl(t.valor):'–'}</td>
+    <td style="font-size:.8rem;color:var(--muted)">${fmtDt(t.criadoEm)}</td>
+    <td style="font-size:.82rem">${t.motivo}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="excluirTroca('${t.id}')">Excluir</button></td>
+  </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  METAS DE VENDAS
+// ═══════════════════════════════════════════════════
+function abrirModalMeta() {
+  const chave = mesAtualChave();
+  document.getElementById('meta-valor').value = metas[chave]||'';
+  document.getElementById('overlay-meta').classList.add('open');
+}
+
+function fecharModalMeta() { document.getElementById('overlay-meta').classList.remove('open'); }
+
+function salvarMeta() {
+  const val = parseFloat(document.getElementById('meta-valor').value)||0;
+  metas[mesAtualChave()] = val;
+  salvarMetas(); fecharModalMeta();
+  // Update the inline meta UI on dashboard
+  const mes = mesAtualChave();
+  const meta = val;
+  const d = new Date();
+  const tMes = vendas.filter(v => {
+    return !v.cancelada && v.data && v.data.slice(0,7) === `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }).reduce((s,v)=>s+v.total,0);
+  const pct = meta>0 ? Math.min(100, Math.round(tMes/meta*100)) : 0;
+  const metaEl = document.getElementById('meta-alvo-val');
+  const metaAtualEl = document.getElementById('meta-atual-val');
+  const metaPctEl = document.getElementById('meta-pct-badge');
+  const metaBar = document.getElementById('meta-progress-bar');
+  if(metaEl) metaEl.textContent = meta>0 ? brl(meta) : 'Não definida';
+  if(metaAtualEl) metaAtualEl.textContent = brl(tMes);
+  if(metaPctEl) metaPctEl.textContent = pct+'%';
+  if(metaBar) metaBar.style.width = pct+'%';
+}
+
+function mesAtualChave() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
 
 // ═══════════════════════════════════════════════════
 //  FECHAR OVERLAY AO CLICAR FORA
