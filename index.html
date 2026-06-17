@@ -6,6 +6,7 @@
   <title>Artnbrilho – Controle de Estoque e Vendas</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -639,14 +640,32 @@
 
     <!-- NOVA VENDA -->
     <div id="page-vendas" class="page">
-      <div class="page-header"><h2>Nova Venda</h2><p>Registre uma venda de produtos</p></div>
+      <div class="page-header"><h2>Nova Venda</h2><p>Adicione produtos pelo código, câmera ou busca por nome</p></div>
       <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
         <div>
-          <div class="toolbar" style="margin-bottom:12px">
-            <select id="venda-produto" style="flex:1"><option value="">Selecione o produto…</option></select>
-            <input type="number" id="venda-qty" placeholder="Qtd" min="1" value="1" style="width:70px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 10px;font-size:.84rem">
-            <button class="btn btn-ghost" onclick="adicionarItemVenda()">Adicionar</button>
+          <!-- LINHA 1: escaneamento por código / leitor físico -->
+          <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+            <div style="flex:1;position:relative">
+              <input type="text" id="scan-codigo" placeholder="📷  Código de barras / QR — digite ou use o leitor"
+                style="width:100%;background:var(--surface);border:2px solid var(--brand);color:var(--text);border-radius:9px;padding:11px 14px;font-size:.9rem;font-family:'Manrope',sans-serif;font-weight:600"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();scanCodigoManual();}"
+                oninput="scanCodigoManual(false)">
+            </div>
+            <button class="btn btn-primary" onclick="abrirCamera()" title="Escanear com câmera" style="padding:11px 16px;flex-shrink:0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <span>Câmera</span>
+            </button>
           </div>
+          <!-- LINHA 2: busca por nome/categoria -->
+          <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
+            <input type="text" id="scan-busca" placeholder="Buscar por nome, categoria ou cor…"
+              style="flex:1;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 14px;font-size:.85rem;font-family:'Manrope',sans-serif"
+              oninput="renderResultadosBusca()">
+            <input type="number" id="venda-qty" placeholder="Qtd" min="1" value="1"
+              style="width:70px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-size:.84rem;font-family:'Manrope',sans-serif">
+          </div>
+          <!-- resultados de busca por nome -->
+          <div id="scan-resultados" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
           <div class="section-title">Itens da Venda</div>
           <div id="lista-itens-venda" class="sale-items" style="min-height:60px">
             <div style="padding:24px;text-align:center;color:var(--muted);font-size:.84rem">Nenhum item adicionado.</div>
@@ -1076,6 +1095,19 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalTroca()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarTroca()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CÂMERA SCANNER -->
+<div class="overlay" id="overlay-camera">
+  <div class="modal" style="max-width:440px;text-align:center">
+    <h3>Escanear Código</h3>
+    <p style="color:var(--muted);font-size:.82rem;margin-bottom:16px">Aponte a câmera para o código de barras ou QR code do produto</p>
+    <div id="camera-reader" style="width:100%;border-radius:10px;overflow:hidden;background:#000;min-height:250px"></div>
+    <p id="camera-status" style="font-size:.78rem;color:var(--muted);margin-top:10px">Iniciando câmera…</p>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-ghost" onclick="fecharCamera()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -1900,8 +1932,129 @@ function renderMovimentos() {
 // ═══════════════════════════════════════════════════
 //  VENDAS
 // ═══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════
+//  SCANNER DE CÓDIGO DE BARRAS / QR CODE
+// ═══════════════════════════════════════════════════
+let _scannerInstance = null;
+let _scanDebounce    = null;
+
+function adicionarProdutoAoCarrinho(prod, qty) {
+  qty = qty || parseInt(document.getElementById('venda-qty').value) || 1;
+  if (!prod) { alert('Produto não encontrado.'); return; }
+  if (prod.estoque < qty) { alert('Estoque insuficiente! Disponível: ' + prod.estoque); return; }
+  const ex = carrinhoVenda.find(i => i.prodId === prod.id);
+  if (ex) {
+    if (prod.estoque < ex.qty + qty) { alert('Estoque insuficiente!'); return; }
+    ex.qty += qty;
+  } else {
+    carrinhoVenda.push({ prodId: prod.id, nome: prod.nome + (prod.tamanho !== 'Único' ? ' ' + prod.tamanho : '') + (prod.cor ? '/' + prod.cor : ''), preco: precoEfetivo(prod), qty });
+  }
+  renderCarrinho();
+  // feedback visual
+  const scanInput = document.getElementById('scan-codigo');
+  if (scanInput) { scanInput.value = ''; scanInput.placeholder = '✅ ' + prod.nome + ' adicionado!'; setTimeout(() => { scanInput.placeholder = '📷  Código de barras / QR — digite ou use o leitor'; }, 2000); }
+}
+
+function scanCodigoManual(confirmar = true) {
+  const input = document.getElementById('scan-codigo');
+  const codigo = (input?.value || '').trim();
+  if (!codigo) return;
+
+  // com Enter ou quando o leitor físico completa (dispara change rápido)
+  if (!confirmar) {
+    clearTimeout(_scanDebounce);
+    _scanDebounce = setTimeout(() => {
+      const prod = produtos.find(p => p.codigo.toLowerCase() === codigo.toLowerCase());
+      if (prod) adicionarProdutoAoCarrinho(prod);
+      // se não achar, não apaga — usuário pode corrigir
+    }, 80); // leitores físicos terminam em < 80ms
+    return;
+  }
+  const prod = produtos.find(p => p.codigo.toLowerCase() === codigo.toLowerCase());
+  if (prod) { adicionarProdutoAoCarrinho(prod); }
+  else { alert('Produto com código "' + codigo + '" não encontrado.'); input.value = ''; }
+}
+
+function renderResultadosBusca() {
+  const q = (document.getElementById('scan-busca')?.value || '').trim().toLowerCase();
+  const wrap = document.getElementById('scan-resultados');
+  if (!wrap) return;
+  if (!q) { wrap.style.display = 'none'; return; }
+  const res = produtos.filter(p =>
+    p.nome.toLowerCase().includes(q) ||
+    p.codigo.toLowerCase().includes(q) ||
+    (p.categoria||'').toLowerCase().includes(q) ||
+    (p.cor||'').toLowerCase().includes(q) ||
+    (p.modelo||'').toLowerCase().includes(q)
+  ).slice(0, 12);
+  if (!res.length) {
+    wrap.style.display = '';
+    wrap.innerHTML = '<div style="padding:14px;color:var(--muted);font-size:.83rem;text-align:center">Nenhum produto encontrado.</div>';
+    return;
+  }
+  wrap.style.display = '';
+  wrap.innerHTML = res.map(p => {
+    const estOk = p.estoque > 0;
+    const thumb = p.imagem ? `<img src="${p.imagem}" style="width:34px;height:34px;object-fit:cover;border-radius:5px;flex-shrink:0">` : `<div style="width:34px;height:34px;background:var(--surface2);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--muted)">sem<br>img</div>`;
+    return `<div onclick="adicionarProdutoAoCarrinho(produtos.find(x=>x.id==='${p.id}'));document.getElementById('scan-busca').value='';renderResultadosBusca();"
+      style="display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s"
+      onmouseenter="this.style.background='var(--surface2)'" onmouseleave="this.style.background=''">
+      ${thumb}
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.nome}</div>
+        <div style="font-size:.72rem;color:var(--muted)">${p.codigo} · ${p.tamanho} · ${p.cor||'–'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-weight:800;font-size:.85rem;color:var(--brand)">${brl(precoEfetivo(p))}</div>
+        <div style="font-size:.7rem;color:${estOk?'var(--green)':'var(--red)'}">${estOk?'Estoque: '+p.estoque:'Sem estoque'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function abrirCamera() {
+  if (typeof Html5Qrcode === 'undefined') { alert('Biblioteca de câmera não carregou. Verifique a conexão com a internet.'); return; }
+  document.getElementById('overlay-camera').classList.add('open');
+  document.getElementById('camera-status').textContent = 'Iniciando câmera…';
+
+  _scannerInstance = new Html5Qrcode('camera-reader');
+  Html5Qrcode.getCameras().then(cameras => {
+    if (!cameras || !cameras.length) { document.getElementById('camera-status').textContent = 'Nenhuma câmera encontrada.'; return; }
+    // prefere câmera traseira
+    const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1];
+    document.getElementById('camera-status').textContent = 'Câmera ativa — aponte para o código';
+    _scannerInstance.start(
+      cam.id,
+      { fps: 12, qrbox: { width: 260, height: 120 } },
+      (decodedText) => {
+        // tenta encontrar pelo código exato ou pelo conteúdo do QR
+        let prod = produtos.find(p => p.codigo === decodedText);
+        if (!prod) prod = produtos.find(p => decodedText.includes(p.codigo));
+        fecharCamera();
+        if (prod) { adicionarProdutoAoCarrinho(prod); }
+        else { alert('Produto com código "' + decodedText + '" não encontrado no sistema.'); }
+      },
+      () => {} // erros de frame ignorados
+    ).catch(err => {
+      document.getElementById('camera-status').textContent = 'Erro ao acessar câmera: ' + err;
+    });
+  }).catch(() => {
+    document.getElementById('camera-status').textContent = 'Sem permissão para acessar a câmera.';
+  });
+}
+
+function fecharCamera() {
+  if (_scannerInstance) {
+    _scannerInstance.stop().catch(() => {}).finally(() => {
+      _scannerInstance.clear();
+      _scannerInstance = null;
+    });
+  }
+  document.getElementById('overlay-camera').classList.remove('open');
+}
+
 function adicionarItemVenda() {
-  const prodId=document.getElementById('venda-produto').value;
+  const prodId=document.getElementById('venda-produto')?.value;
   const qty=parseInt(document.getElementById('venda-qty').value)||1;
   if(!prodId){alert('Selecione um produto.');return;}
   const prod=produtos.find(p=>p.id===prodId);
@@ -2737,7 +2890,12 @@ function mesAtualChave() {
 //  FECHAR OVERLAY AO CLICAR FORA
 // ═══════════════════════════════════════════════════
 document.querySelectorAll('.overlay').forEach(ov=>{
-  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
+  ov.addEventListener('click',e=>{
+    if(e.target===ov){
+      if(ov.id==='overlay-camera') fecharCamera();
+      else ov.classList.remove('open');
+    }
+  });
 });
 
 // ═══════════════════════════════════════════════════
