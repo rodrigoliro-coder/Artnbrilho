@@ -1400,13 +1400,27 @@ function excluirUsuario(id) {
 function previewImagem(input) {
   const file = input.files[0];
   if (!file) return;
-  if (file.size > 2097152) { alert('Imagem muito grande. Use uma imagem menor que 2MB.'); input.value=''; return; }
+  if (file.size > 20971520) { alert('Imagem muito grande. Use uma imagem menor que 20MB.'); input.value=''; return; }
   const reader = new FileReader();
   reader.onload = e => {
-    const prev = document.getElementById('prod-imagem-preview');
-    prev.src = e.target.result; prev.style.display = 'block';
-    document.getElementById('img-upload-hint').style.display = 'none';
-    document.getElementById('prod-imagem').value = e.target.result;
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 900;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        const r = Math.min(MAX / w, MAX / h);
+        w = Math.round(w * r); h = Math.round(h * r);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const base64 = canvas.toDataURL('image/jpeg', 0.75);
+      const prev = document.getElementById('prod-imagem-preview');
+      prev.src = base64; prev.style.display = 'block';
+      document.getElementById('img-upload-hint').style.display = 'none';
+      document.getElementById('prod-imagem').value = base64;
+    };
+    img.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
