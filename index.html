@@ -1229,9 +1229,9 @@ function clearAuthMsgs(...ids) {
 const PERFIL_LABEL = { admin: 'Administrador', operador: 'Operador', vendedor: 'Vendedor' };
 
 const PAGINAS_PERMITIDAS = {
-  admin:    ['dashboard','produtos','estoque','clientes','precificacao','etiquetas','vendas','historico','trocas','relatorios','calendario','usuarios','minha-conta'],
-  operador: ['dashboard','produtos','estoque','clientes','precificacao','etiquetas','vendas','historico','trocas','relatorios','calendario','minha-conta'],
-  vendedor: ['dashboard','vendas','historico','minha-conta'],
+  admin:    TODAS_PAGINAS,
+  operador: TODAS_PAGINAS,
+  vendedor: TODAS_PAGINAS,
 };
 
 // ═══════════════════════════════════════════════════
@@ -1442,7 +1442,7 @@ function iniciarApp() {
   document.getElementById('nav-perfil').textContent = PERFIL_LABEL[u.perfil] || u.perfil;
   document.getElementById('nav-avatar').textContent = u.nome.charAt(0).toUpperCase();
 
-  document.getElementById('nav-usuarios-item').style.display = u.perfil === 'admin' ? '' : 'none';
+  document.getElementById('nav-usuarios-item').style.display = '';
 
   navigate('dashboard');
 }
