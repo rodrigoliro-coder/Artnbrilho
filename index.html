@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Artnbrilho – Controle de Estoque e Vendas</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --brand: #e85d04;
+      --brand-dark: #9d0208;
+      --brand-light: #ffba08;
+      --bg: #0d0d0d;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --border: #2e2e2e;
+      --text: #f0f0f0;
+      --muted: #888;
+      --green: #2ecc71;
+      --red: #e74c3c;
+      --yellow: #f39c12;
+      --blue: #3498db;
+      --radius: 10px;
+      --shadow: 0 4px 20px rgba(0,0,0,.5);
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Layout ── */
+    .app { display: flex; min-height: 100vh; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .logo {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo h1 {
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, var(--brand), var(--brand-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+    }
+    .logo small { color: var(--muted); font-size: .7rem; }
+    .nav { flex: 1; padding: 12px 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: .88rem;
+      transition: all .15s;
+      border-left: 3px solid transparent;
+    }
+    .nav-item:hover { color: var(--text); background: var(--surface2); }
+    .nav-item.active { color: var(--brand); border-left-color: var(--brand); background: rgba(232,93,4,.08); }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      font-size: .72rem;
+      color: var(--muted);
+    }
+
+    /* ── Main ── */
+    .main { margin-left: 220px; flex: 1; padding: 28px; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom: 24px; }
+    .page-header h2 { font-size: 1.5rem; font-weight: 700; }
+    .page-header p { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+
+    /* ── Cards ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .card.orange::before { background: var(--brand); }
+    .card.green::before  { background: var(--green); }
+    .card.yellow::before { background: var(--yellow); }
+    .card.blue::before   { background: var(--blue); }
+    .card.red::before    { background: var(--red); }
+    .card-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+    .card-value { font-size: 1.8rem; font-weight: 800; margin-top: 6px; }
+    .card-sub { font-size: .75rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── Table ── */
+    .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    thead { background: var(--surface2); }
+    th { padding: 12px 16px; text-align: left; color: var(--muted); font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; }
+    td { padding: 12px 16px; border-top: 1px solid var(--border); }
+    tr:hover td { background: rgba(255,255,255,.02); }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: .72rem;
+      font-weight: 600;
+    }
+    .badge-green  { background: rgba(46,204,113,.15); color: var(--green); }
+    .badge-red    { background: rgba(231,76,60,.15);  color: var(--red); }
+    .badge-yellow { background: rgba(243,156,18,.15); color: var(--yellow); }
+    .badge-blue   { background: rgba(52,152,219,.15); color: var(--blue); }
+    .badge-gray   { background: rgba(136,136,136,.15); color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border-radius: 7px;
+      border: none;
+      cursor: pointer;
+      font-size: .84rem;
+      font-weight: 600;
+      transition: all .15s;
+    }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-primary:hover { background: #c44d03; }
+    .btn-success { background: var(--green); color: #fff; }
+    .btn-success:hover { background: #27ae60; }
+    .btn-danger  { background: var(--red);   color: #fff; }
+    .btn-danger:hover  { background: #c0392b; }
+    .btn-ghost   { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-sm { padding: 5px 10px; font-size: .78rem; }
+    .btn svg { width: 15px; height: 15px; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .toolbar input[type=text], .toolbar select {
+      background: var(--surface); border: 1px solid var(--border);
+      color: var(--text); border-radius: 7px;
+      padding: 8px 12px; font-size: .84rem;
+    }
+    .toolbar input[type=text] { flex: 1; min-width: 180px; }
+    .toolbar input[type=text]:focus, .toolbar select:focus { outline: 1px solid var(--brand); }
+
+    /* ── Modal ── */
+    .overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.7);
+      z-index: 200;
+      align-items: center; justify-content: center;
+      padding: 20px;
+    }
+    .overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow);
+    }
+    .modal h3 { font-size: 1.1rem; margin-bottom: 20px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: .8rem; color: var(--muted); margin-bottom: 5px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: .85rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: 1px solid var(--brand); border-color: var(--brand);
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* ── Sale items ── */
+    .sale-items { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; margin-bottom: 12px; }
+    .sale-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+    .sale-item:last-child { border-bottom: none; }
+    .sale-item-name { flex: 1; font-size: .84rem; }
+    .sale-item-qty { width: 60px; }
+    .sale-item-price { width: 90px; text-align: right; font-weight: 700; }
+    .sale-item input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 5px; padding: 4px 8px; font-size: .8rem; }
+    .sale-total { font-size: 1.1rem; font-weight: 800; color: var(--green); text-align: right; margin-bottom: 14px; }
+
+    /* ── Chart ── */
+    .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }
+    .chart-title { font-size: .85rem; font-weight: 600; margin-bottom: 16px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .bar-chart { display: flex; align-items: flex-end; gap: 10px; height: 120px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar {
+      width: 100%;
+      background: linear-gradient(to top, var(--brand), var(--brand-light));
+      border-radius: 4px 4px 0 0;
+      transition: height .4s ease;
+      min-height: 4px;
+    }
+    .bar-label { font-size: .7rem; color: var(--muted); }
+    .bar-val { font-size: .7rem; color: var(--brand-light); font-weight: 700; }
+
+    /* ── Empty state ── */
+    .empty { text-align: center; padding: 48px 20px; color: var(--muted); }
+    .empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: .3; }
+    .empty p { font-size: .88rem; }
+
+    /* ── Alerts ── */
+    .alert { border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; font-size: .84rem; }
+    .alert-warning { background: rgba(243,156,18,.12); border: 1px solid rgba(243,156,18,.3); color: var(--yellow); }
+
+    /* ── Section divider ── */
+    .section-title { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 24px 0 12px; }
+
+    /* ── Responsive ── */
+    @media (max-width: 680px) {
+      .sidebar { width: 60px; }
+      .logo h1, .logo small, .nav-item span { display: none; }
+      .nav-item { justify-content: center; padding: 14px; }
+      .main { margin-left: 60px; padding: 16px; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+
+    /* ── Print ── */
+    @media print {
+      .sidebar, .toolbar .btn, .btn-danger, .btn-ghost { display: none !important; }
+      .main { margin-left: 0; }
+      body { background: #fff; color: #000; }
+      .table-wrap, .card { border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ══ Sidebar ══ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>Artnbrilho</h1>
+      <small>Gestão de Estoque</small>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </div>
+      <div class="nav-item" onclick="navigate('produtos')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+        <span>Produtos</span>
+      </div>
+      <div class="nav-item" onclick="navigate('estoque')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        <span>Estoque</span>
+      </div>
+      <div class="nav-item" onclick="navigate('vendas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+        <span>Nova Venda</span>
+      </div>
+      <div class="nav-item" onclick="navigate('historico')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>
+        <span>Histórico</span>
+      </div>
+      <div class="nav-item" onclick="navigate('relatorios')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Relatórios</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">v1.0 © Artnbrilho</div>
+  </aside>
+
+  <!-- ══ Main content ══ -->
+  <main class="main">
+
+    <!-- ── Dashboard ── -->
+    <div id="page-dashboard" class="page active">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p id="dash-date"></p>
+      </div>
+      <div class="cards">
+        <div class="card orange">
+          <div class="card-label">Vendas Hoje</div>
+          <div class="card-value" id="card-vendas-hoje">R$ 0,00</div>
+          <div class="card-sub" id="card-qtd-hoje">0 pedidos</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">Faturamento Mês</div>
+          <div class="card-value" id="card-fat-mes">R$ 0,00</div>
+          <div class="card-sub" id="card-qtd-mes">0 pedidos</div>
+        </div>
+        <div class="card blue">
+          <div class="card-label">Produtos Cadastrados</div>
+          <div class="card-value" id="card-produtos">0</div>
+          <div class="card-sub">itens no catálogo</div>
+        </div>
+        <div class="card yellow">
+          <div class="card-label">Itens em Estoque</div>
+          <div class="card-value" id="card-estoque">0</div>
+          <div class="card-sub">unidades totais</div>
+        </div>
+        <div class="card red">
+          <div class="card-label">Estoque Baixo</div>
+          <div class="card-value" id="card-baixo">0</div>
+          <div class="card-sub">produtos críticos</div>
+        </div>
+      </div>
+
+      <div id="alert-estoque-baixo" style="display:none" class="alert alert-warning">
+        ⚠️ Atenção: há produtos com estoque abaixo do mínimo. Verifique a aba <strong>Produtos</strong>.
+      </div>
+
+      <div class="chart-wrap">
+        <div class="chart-title">Vendas – últimos 7 dias (R$)</div>
+        <div class="bar-chart" id="chart-7dias"></div>
+      </div>
+
+      <div class="section-title">Últimas Vendas</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Itens</th><th>Total</th><th>Pagamento</th></tr></thead>
+          <tbody id="dash-vendas-recentes"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Produtos ── -->
+    <div id="page-produtos" class="page">
+      <div class="page-header">
+        <h2>Produtos</h2>
+        <p>Catálogo de camisetas e itens</p>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="busca-produto" placeholder="Buscar produto…" oninput="renderProdutos()">
+        <select id="filtro-cat" onchange="renderProdutos()">
+          <option value="">Todas as categorias</option>
+          <option>Camiseta Básica</option>
+          <option>Camiseta Estampada</option>
+          <option>Regata</option>
+          <option>Polo</option>
+          <option>Moletom</option>
+          <option>Acessório</option>
+        </select>
+        <button class="btn btn-primary" onclick="abrirModalProduto()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Novo Produto
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Tam.</th><th>Cor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-produtos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Estoque ── -->
+    <div id="page-estoque" class="page">
+      <div class="page-header">
+        <h2>Movimentação de Estoque</h2>
+        <p>Entradas e saídas de produtos</p>
+      </div>
+      <div class="toolbar">
+        <select id="mov-produto" style="flex:1;min-width:200px">
+          <option value="">Selecione o produto…</option>
+        </select>
+        <select id="mov-tipo">
+          <option value="entrada">Entrada</option>
+          <option value="saida">Saída</option>
+          <option value="ajuste">Ajuste</option>
+        </select>
+        <input type="number" id="mov-qty" placeholder="Qtd" min="1" style="width:80px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 12px;font-size:.84rem">
+        <input type="text" id="mov-obs" placeholder="Observação" style="width:200px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 12px;font-size:.84rem">
+        <button class="btn btn-success" onclick="registrarMovimento()">Registrar</button>
+      </div>
+      <div class="section-title">Histórico de Movimentações</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Data/Hora</th><th>Produto</th><th>Tipo</th><th>Qtd</th><th>Saldo Ant.</th><th>Saldo Atual</th><th>Obs.</th></tr></thead>
+          <tbody id="tabela-movimentos"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Nova Venda ── -->
+    <div id="page-vendas" class="page">
+      <div class="page-header">
+        <h2>Nova Venda</h2>
+        <p>Registre uma venda de produtos</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;align-items:start">
+        <!-- Carrinho -->
+        <div>
+          <div class="toolbar" style="margin-bottom:12px">
+            <select id="venda-produto" style="flex:1">
+              <option value="">Selecione o produto…</option>
+            </select>
+            <input type="number" id="venda-qty" placeholder="Qtd" min="1" value="1" style="width:70px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:8px 10px;font-size:.84rem">
+            <button class="btn btn-ghost" onclick="adicionarItemVenda()">Adicionar</button>
+          </div>
+
+          <div class="section-title">Itens da Venda</div>
+          <div id="lista-itens-venda" class="sale-items" style="min-height:60px">
+            <div class="empty" style="padding:24px"><p>Nenhum item adicionado.</p></div>
+          </div>
+          <div class="sale-total" id="total-venda">Total: R$ 0,00</div>
+        </div>
+
+        <!-- Dados do pedido -->
+        <div class="table-wrap" style="padding:20px;background:var(--surface)">
+          <h3 style="font-size:.95rem;margin-bottom:16px">Dados do Pedido</h3>
+          <div class="form-group">
+            <label>Cliente</label>
+            <input type="text" id="venda-cliente" placeholder="Nome do cliente">
+          </div>
+          <div class="form-group">
+            <label>Telefone</label>
+            <input type="text" id="venda-telefone" placeholder="(00) 00000-0000">
+          </div>
+          <div class="form-group">
+            <label>Forma de Pagamento</label>
+            <select id="venda-pagamento">
+              <option>Dinheiro</option>
+              <option>PIX</option>
+              <option>Cartão de Débito</option>
+              <option>Cartão de Crédito</option>
+              <option>Boleto</option>
+              <option>Fiado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Desconto (R$)</label>
+            <input type="number" id="venda-desconto" placeholder="0,00" min="0" step="0.01" oninput="calcularTotal()">
+          </div>
+          <div class="form-group">
+            <label>Observações</label>
+            <textarea id="venda-obs" rows="2" placeholder="Entrega, personalização…"></textarea>
+          </div>
+          <div style="font-size:1rem;font-weight:800;color:var(--green);margin:12px 0;text-align:right" id="total-final-display">Total: R$ 0,00</div>
+          <button class="btn btn-success" style="width:100%" onclick="finalizarVenda()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="20 6 9 17 4 12"/></svg>
+            Finalizar Venda
+          </button>
+          <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="limparVenda()">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Histórico ── -->
+    <div id="page-historico" class="page">
+      <div class="page-header">
+        <h2>Histórico de Vendas</h2>
+        <p>Todas as vendas registradas</p>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="busca-venda" placeholder="Buscar cliente ou #…" oninput="renderHistorico()">
+        <select id="filtro-pag" onchange="renderHistorico()">
+          <option value="">Todos os pagamentos</option>
+          <option>Dinheiro</option><option>PIX</option>
+          <option>Cartão de Débito</option><option>Cartão de Crédito</option>
+          <option>Boleto</option><option>Fiado</option>
+        </select>
+        <input type="date" id="filtro-data-ini" onchange="renderHistorico()">
+        <input type="date" id="filtro-data-fim" onchange="renderHistorico()">
+        <button class="btn btn-ghost btn-sm" onclick="exportarCSV()">Exportar CSV</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Data</th><th>Cliente</th><th>Itens</th><th>Desconto</th><th>Total</th><th>Pagamento</th><th>Ações</th></tr></thead>
+          <tbody id="tabela-historico"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Relatórios ── -->
+    <div id="page-relatorios" class="page">
+      <div class="page-header">
+        <h2>Relatórios</h2>
+        <p>Análise de desempenho e estoque</p>
+      </div>
+      <div class="cards">
+        <div class="card orange">
+          <div class="card-label">Total de Vendas</div>
+          <div class="card-value" id="rel-total">R$ 0,00</div>
+          <div class="card-sub" id="rel-qtd-vendas">0 pedidos</div>
+        </div>
+        <div class="card green">
+          <div class="card-label">Ticket Médio</div>
+          <div class="card-value" id="rel-ticket">R$ 0,00</div>
+          <div class="card-sub">por venda</div>
+        </div>
+        <div class="card blue">
+          <div class="card-label">Produto Mais Vendido</div>
+          <div class="card-value" id="rel-top" style="font-size:1rem">–</div>
+          <div class="card-sub" id="rel-top-qty"></div>
+        </div>
+        <div class="card yellow">
+          <div class="card-label">Forma Mais Usada</div>
+          <div class="card-value" id="rel-pag" style="font-size:1rem">–</div>
+          <div class="card-sub" id="rel-pag-qty"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Produtos com Estoque Baixo (≤ mínimo)</div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table>
+          <thead><tr><th>Código</th><th>Produto</th><th>Tamanho</th><th>Cor</th><th>Estoque</th><th>Mínimo</th></tr></thead>
+          <tbody id="rel-estoque-baixo"></tbody>
+        </table>
+      </div>
+
+      <div class="section-title">Ranking de Produtos Vendidos</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Produto</th><th>Unidades Vendidas</th><th>Faturamento</th></tr></thead>
+          <tbody id="rel-ranking"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══ Modal Produto ══ -->
+<div class="overlay" id="overlay-produto">
+  <div class="modal">
+    <h3 id="modal-prod-titulo">Novo Produto</h3>
+    <input type="hidden" id="prod-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Código *</label>
+        <input type="text" id="prod-codigo" placeholder="Ex: ART-001">
+      </div>
+      <div class="form-group">
+        <label>Categoria *</label>
+        <select id="prod-categoria">
+          <option>Camiseta Básica</option>
+          <option>Camiseta Estampada</option>
+          <option>Regata</option>
+          <option>Polo</option>
+          <option>Moletom</option>
+          <option>Acessório</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Nome do Produto *</label>
+      <input type="text" id="prod-nome" placeholder="Ex: Camiseta Básica Preta">
+    </div>
+    <div class="form-group">
+      <label>Descrição</label>
+      <textarea id="prod-descricao" rows="2" placeholder="Detalhes do produto…"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tamanho</label>
+        <select id="prod-tamanho">
+          <option>Único</option><option>PP</option><option>P</option>
+          <option>M</option><option>G</option><option>GG</option><option>XGG</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Cor</label>
+        <input type="text" id="prod-cor" placeholder="Ex: Preto">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Preço de Venda (R$) *</label>
+        <input type="number" id="prod-preco" placeholder="0,00" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>Custo (R$)</label>
+        <input type="number" id="prod-custo" placeholder="0,00" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Estoque Inicial</label>
+        <input type="number" id="prod-estoque" placeholder="0" min="0">
+      </div>
+      <div class="form-group">
+        <label>Estoque Mínimo</label>
+        <input type="number" id="prod-minimo" placeholder="5" min="0">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalProduto()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Modal Detalhe Venda ══ -->
+<div class="overlay" id="overlay-venda-det">
+  <div class="modal">
+    <h3>Detalhes da Venda</h3>
+    <div id="det-venda-conteudo"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalVenda()">Fechar</button>
+      <button class="btn btn-danger btn-sm" id="btn-cancelar-venda">Cancelar Venda</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════
+//  ESTADO
+// ════════════════════════════════════
+let produtos   = JSON.parse(localStorage.getItem('ab_produtos')   || '[]');
+let movimentos = JSON.parse(localStorage.getItem('ab_movimentos') || '[]');
+let vendas     = JSON.parse(localStorage.getItem('ab_vendas')     || '[]');
+let carrinhoVenda = [];
+let editandoProdutoId = null;
+let vendaDetalheId    = null;
+
+// ════════════════════════════════════
+//  UTIL
+// ════════════════════════════════════
+const salvarProdutos   = () => localStorage.setItem('ab_produtos',   JSON.stringify(produtos));
+const salvarMovimentos = () => localStorage.setItem('ab_movimentos', JSON.stringify(movimentos));
+const salvarVendas     = () => localStorage.setItem('ab_vendas',     JSON.stringify(vendas));
+const genId            = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const brl              = v  => 'R$ ' + Number(v).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const hoje             = ()  => new Date().toISOString().slice(0, 10);
+const agora            = ()  => new Date().toISOString();
+const fmtDt = iso => {
+  const d = new Date(iso);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
+};
+
+function estoqueAtual(id) {
+  return (produtos.find(p => p.id === id) || {}).estoque || 0;
+}
+
+// ════════════════════════════════════
+//  NAVEGAÇÃO
+// ════════════════════════════════════
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item')[
+    ['dashboard','produtos','estoque','vendas','historico','relatorios'].indexOf(page)
+  ].classList.add('active');
+  const renders = {
+    dashboard: renderDashboard,
+    produtos: renderProdutos,
+    estoque: () => { populateSelects(); renderMovimentos(); },
+    vendas: () => { populateSelects(); calcularTotal(); },
+    historico: renderHistorico,
+    relatorios: renderRelatorios,
+  };
+  if (renders[page]) renders[page]();
+}
+
+// ════════════════════════════════════
+//  PRODUCTS
+// ════════════════════════════════════
+function abrirModalProduto(id = null) {
+  editandoProdutoId = id;
+  const el = v => document.getElementById(v);
+  if (id) {
+    const p = produtos.find(x => x.id === id);
+    el('modal-prod-titulo').textContent = 'Editar Produto';
+    el('prod-id').value        = p.id;
+    el('prod-codigo').value    = p.codigo;
+    el('prod-categoria').value = p.categoria;
+    el('prod-nome').value      = p.nome;
+    el('prod-descricao').value = p.descricao || '';
+    el('prod-tamanho').value   = p.tamanho;
+    el('prod-cor').value       = p.cor;
+    el('prod-preco').value     = p.preco;
+    el('prod-custo').value     = p.custo || '';
+    el('prod-estoque').value   = p.estoque;
+    el('prod-minimo').value    = p.minimo;
+  } else {
+    el('modal-prod-titulo').textContent = 'Novo Produto';
+    ['prod-id','prod-codigo','prod-nome','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque'].forEach(f => el(f).value = '');
+    el('prod-categoria').value = 'Camiseta Básica';
+    el('prod-tamanho').value   = 'M';
+    el('prod-minimo').value    = '5';
+    el('prod-estoque').value   = '0';
+  }
+  document.getElementById('overlay-produto').classList.add('open');
+}
+function fecharModalProduto() {
+  document.getElementById('overlay-produto').classList.remove('open');
+}
+
+function salvarProduto() {
+  const v = id => document.getElementById(id).value.trim();
+  if (!v('prod-codigo') || !v('prod-nome') || !v('prod-preco')) {
+    alert('Preencha código, nome e preço.');
+    return;
+  }
+  const estoqueQty = parseInt(v('prod-estoque')) || 0;
+
+  if (editandoProdutoId) {
+    const p = produtos.find(x => x.id === editandoProdutoId);
+    const diff = estoqueQty - p.estoque;
+    Object.assign(p, {
+      codigo: v('prod-codigo'), categoria: v('prod-categoria'),
+      nome: v('prod-nome'), descricao: v('prod-descricao'),
+      tamanho: v('prod-tamanho'), cor: v('prod-cor'),
+      preco: parseFloat(v('prod-preco')) || 0,
+      custo: parseFloat(v('prod-custo')) || 0,
+      estoque: estoqueQty,
+      minimo: parseInt(document.getElementById('prod-minimo').value) || 0,
+    });
+    if (diff !== 0) {
+      registrarMovimentoInterno(editandoProdutoId, 'ajuste', Math.abs(diff), diff >= 0 ? 'Ajuste positivo (edição)' : 'Ajuste negativo (edição)', estoqueQty - diff);
+    }
+  } else {
+    const novoId = genId();
+    produtos.push({
+      id: novoId,
+      codigo: v('prod-codigo'), categoria: v('prod-categoria'),
+      nome: v('prod-nome'), descricao: v('prod-descricao'),
+      tamanho: v('prod-tamanho'), cor: v('prod-cor'),
+      preco: parseFloat(v('prod-preco')) || 0,
+      custo: parseFloat(v('prod-custo')) || 0,
+      estoque: estoqueQty,
+      minimo: parseInt(document.getElementById('prod-minimo').value) || 0,
+      criadoEm: agora(),
+    });
+    if (estoqueQty > 0) registrarMovimentoInterno(novoId, 'entrada', estoqueQty, 'Estoque inicial', 0);
+  }
+  salvarProdutos();
+  fecharModalProduto();
+  renderProdutos();
+}
+
+function excluirProduto(id) {
+  if (!confirm('Excluir este produto? Histórico de movimentações será mantido.')) return;
+  produtos = produtos.filter(p => p.id !== id);
+  salvarProdutos();
+  renderProdutos();
+}
+
+function renderProdutos() {
+  const busca  = (document.getElementById('busca-produto').value || '').toLowerCase();
+  const cat    = (document.getElementById('filtro-cat').value || '');
+  const tbody  = document.getElementById('tabela-produtos');
+  const filtrados = produtos.filter(p =>
+    (!busca || p.nome.toLowerCase().includes(busca) || p.codigo.toLowerCase().includes(busca) || (p.cor||'').toLowerCase().includes(busca)) &&
+    (!cat || p.categoria === cat)
+  );
+  if (!filtrados.length) {
+    tbody.innerHTML = `<tr><td colspan="9" class="empty" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtrados.map(p => {
+    const baixo = p.estoque <= p.minimo;
+    const status = baixo ? '<span class="badge badge-red">Baixo</span>' : '<span class="badge badge-green">OK</span>';
+    if (p.estoque === 0) p._badge = '<span class="badge badge-gray">Sem estoque</span>';
+    const sb = p.estoque === 0 ? '<span class="badge badge-gray">Sem estoque</span>' : status;
+    return `<tr>
+      <td><code style="font-size:.78rem;color:var(--muted)">${p.codigo}</code></td>
+      <td><strong>${p.nome}</strong>${p.descricao ? `<br><small style="color:var(--muted)">${p.descricao}</small>` : ''}</td>
+      <td>${p.categoria}</td>
+      <td><span class="badge badge-blue">${p.tamanho}</span></td>
+      <td>${p.cor || '–'}</td>
+      <td>${brl(p.preco)}</td>
+      <td style="font-weight:700;color:${p.estoque <= p.minimo ? 'var(--red)' : 'var(--green)'}">${p.estoque}</td>
+      <td>${sb}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="abrirModalProduto('${p.id}')">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="excluirProduto('${p.id}')">Del</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════
+//  ESTOQUE / MOVIMENTOS
+// ════════════════════════════════════
+function populateSelects() {
+  const opts = produtos.map(p => `<option value="${p.id}">${p.codigo} – ${p.nome} (${p.tamanho}${p.cor ? ' / ' + p.cor : ''}) [${p.estoque} un]</option>`).join('');
+  ['mov-produto', 'venda-produto'].forEach(sel => {
+    const el = document.getElementById(sel);
+    if (el) el.innerHTML = '<option value="">Selecione o produto…</option>' + opts;
+  });
+}
+
+function registrarMovimentoInterno(prodId, tipo, qty, obs, saldoAntes) {
+  const prod = produtos.find(p => p.id === prodId);
+  if (!prod) return;
+  const saldoDepois = tipo === 'entrada' ? saldoAntes + qty :
+                      tipo === 'saida'   ? saldoAntes - qty : saldoAntes + (qty * (obs.includes('negativo') ? -1 : 1));
+  movimentos.unshift({
+    id: genId(), data: agora(), prodId,
+    prodNome: `${prod.nome} (${prod.tamanho}${prod.cor ? '/' + prod.cor : ''})`,
+    tipo, qty, obs, saldoAntes, saldoDepois,
+  });
+  salvarMovimentos();
+}
+
+function registrarMovimento() {
+  const prodId = document.getElementById('mov-produto').value;
+  const tipo   = document.getElementById('mov-tipo').value;
+  const qty    = parseInt(document.getElementById('mov-qty').value) || 0;
+  const obs    = document.getElementById('mov-obs').value.trim();
+  if (!prodId) { alert('Selecione um produto.'); return; }
+  if (qty <= 0) { alert('Informe uma quantidade válida.'); return; }
+  const prod = produtos.find(p => p.id === prodId);
+  const antes = prod.estoque;
+  if (tipo === 'entrada')  prod.estoque += qty;
+  else if (tipo === 'saida') {
+    if (prod.estoque < qty) { alert('Estoque insuficiente!'); return; }
+    prod.estoque -= qty;
+  } else {
+    prod.estoque = qty;
+  }
+  registrarMovimentoInterno(prodId, tipo, qty, obs || '–', antes);
+  salvarProdutos();
+  populateSelects();
+  renderMovimentos();
+  document.getElementById('mov-qty').value = '';
+  document.getElementById('mov-obs').value = '';
+}
+
+function renderMovimentos() {
+  const tbody = document.getElementById('tabela-movimentos');
+  if (!movimentos.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty" style="padding:36px;text-align:center;color:var(--muted)">Nenhuma movimentação ainda.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = movimentos.slice(0, 200).map(m => {
+    const badge = m.tipo === 'entrada'
+      ? '<span class="badge badge-green">Entrada</span>'
+      : m.tipo === 'saida'
+      ? '<span class="badge badge-red">Saída</span>'
+      : '<span class="badge badge-yellow">Ajuste</span>';
+    const sinal = m.tipo === 'entrada' ? '+' : m.tipo === 'saida' ? '-' : '=';
+    return `<tr>
+      <td style="font-size:.78rem;color:var(--muted)">${fmtDt(m.data)}</td>
+      <td>${m.prodNome}</td>
+      <td>${badge}</td>
+      <td style="font-weight:700;color:${m.tipo==='entrada'?'var(--green)':m.tipo==='saida'?'var(--red)':'var(--yellow)'}">${sinal}${m.qty}</td>
+      <td>${m.saldoAntes}</td>
+      <td>${m.saldoDepois}</td>
+      <td style="color:var(--muted);font-size:.8rem">${m.obs}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════
+//  VENDAS
+// ════════════════════════════════════
+function adicionarItemVenda() {
+  const prodId = document.getElementById('venda-produto').value;
+  const qty    = parseInt(document.getElementById('venda-qty').value) || 1;
+  if (!prodId) { alert('Selecione um produto.'); return; }
+  const prod = produtos.find(p => p.id === prodId);
+  if (prod.estoque < qty) { alert('Estoque insuficiente! Disponível: ' + prod.estoque); return; }
+  const existente = carrinhoVenda.find(i => i.prodId === prodId);
+  if (existente) {
+    if (prod.estoque < existente.qty + qty) { alert('Estoque insuficiente!'); return; }
+    existente.qty += qty;
+  } else {
+    carrinhoVenda.push({ prodId, nome: prod.nome + (prod.tamanho !== 'Único' ? ' ' + prod.tamanho : '') + (prod.cor ? '/' + prod.cor : ''), preco: prod.preco, qty });
+  }
+  renderCarrinho();
+}
+
+function removerItemVenda(i) {
+  carrinhoVenda.splice(i, 1);
+  renderCarrinho();
+}
+
+function renderCarrinho() {
+  const el = document.getElementById('lista-itens-venda');
+  if (!carrinhoVenda.length) {
+    el.innerHTML = '<div class="empty" style="padding:24px"><p>Nenhum item adicionado.</p></div>';
+    calcularTotal();
+    return;
+  }
+  el.innerHTML = carrinhoVenda.map((item, i) => `
+    <div class="sale-item">
+      <div class="sale-item-name">${item.nome}</div>
+      <input type="number" class="sale-item-qty" value="${item.qty}" min="1" style="width:60px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:4px 8px;font-size:.8rem" onchange="atualizarQtyCarrinho(${i}, this.value)">
+      <div class="sale-item-price">${brl(item.preco * item.qty)}</div>
+      <button class="btn btn-danger btn-sm" onclick="removerItemVenda(${i})">×</button>
+    </div>
+  `).join('');
+  calcularTotal();
+}
+
+function atualizarQtyCarrinho(i, val) {
+  const qty  = parseInt(val) || 1;
+  const prod = produtos.find(p => p.id === carrinhoVenda[i].prodId);
+  if (prod.estoque < qty) { alert('Estoque insuficiente! Disponível: ' + prod.estoque); return; }
+  carrinhoVenda[i].qty = qty;
+  calcularTotal();
+}
+
+function calcularTotal() {
+  const subtotal  = carrinhoVenda.reduce((s, i) => s + i.preco * i.qty, 0);
+  const desconto  = parseFloat(document.getElementById('venda-desconto')?.value) || 0;
+  const total     = Math.max(0, subtotal - desconto);
+  const el        = document.getElementById('total-venda');
+  const el2       = document.getElementById('total-final-display');
+  if (el)  el.textContent  = `Total: ${brl(total)}`;
+  if (el2) el2.textContent = `Total: ${brl(total)}`;
+}
+
+function finalizarVenda() {
+  if (!carrinhoVenda.length) { alert('Adicione ao menos um item.'); return; }
+  const cliente   = document.getElementById('venda-cliente').value.trim() || 'Consumidor';
+  const telefone  = document.getElementById('venda-telefone').value.trim();
+  const pagamento = document.getElementById('venda-pagamento').value;
+  const desconto  = parseFloat(document.getElementById('venda-desconto').value) || 0;
+  const obs       = document.getElementById('venda-obs').value.trim();
+  const subtotal  = carrinhoVenda.reduce((s, i) => s + i.preco * i.qty, 0);
+  const total     = Math.max(0, subtotal - desconto);
+
+  // baixar estoque
+  carrinhoVenda.forEach(item => {
+    const prod = produtos.find(p => p.id === item.prodId);
+    const antes = prod.estoque;
+    prod.estoque -= item.qty;
+    registrarMovimentoInterno(item.prodId, 'saida', item.qty, `Venda #${vendas.length + 1}`, antes);
+  });
+  salvarProdutos();
+  salvarMovimentos();
+
+  const novaVenda = {
+    id: genId(), num: vendas.length + 1, data: agora(),
+    cliente, telefone, pagamento, obs,
+    itens: carrinhoVenda.map(i => ({ ...i })),
+    subtotal, desconto, total, cancelada: false,
+  };
+  vendas.unshift(novaVenda);
+  salvarVendas();
+
+  alert(`Venda #${novaVenda.num} registrada com sucesso!\nTotal: ${brl(total)}`);
+  limparVenda();
+}
+
+function limparVenda() {
+  carrinhoVenda = [];
+  ['venda-cliente','venda-telefone','venda-desconto','venda-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('venda-pagamento').value = 'Dinheiro';
+  renderCarrinho();
+}
+
+// ════════════════════════════════════
+//  HISTÓRICO
+// ════════════════════════════════════
+function renderHistorico() {
+  const busca   = (document.getElementById('busca-venda').value || '').toLowerCase();
+  const pag     = document.getElementById('filtro-pag').value;
+  const ini     = document.getElementById('filtro-data-ini').value;
+  const fim     = document.getElementById('filtro-data-fim').value;
+  const tbody   = document.getElementById('tabela-historico');
+  const filtradas = vendas.filter(v =>
+    (!busca || v.cliente.toLowerCase().includes(busca) || String(v.num).includes(busca)) &&
+    (!pag || v.pagamento === pag) &&
+    (!ini || v.data.slice(0,10) >= ini) &&
+    (!fim || v.data.slice(0,10) <= fim)
+  );
+  if (!filtradas.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="padding:36px;text-align:center;color:var(--muted)">Nenhuma venda encontrada.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtradas.map(v => `
+    <tr style="${v.cancelada ? 'opacity:.45;text-decoration:line-through' : ''}">
+      <td><strong>#${v.num}</strong></td>
+      <td style="font-size:.8rem">${fmtDt(v.data)}</td>
+      <td>${v.cliente}</td>
+      <td style="font-size:.8rem">${v.itens.map(i => `${i.nome} ×${i.qty}`).join(', ')}</td>
+      <td>${v.desconto > 0 ? brl(v.desconto) : '–'}</td>
+      <td style="font-weight:700;color:var(--green)">${brl(v.total)}</td>
+      <td><span class="badge badge-blue">${v.pagamento}</span></td>
+      <td><button class="btn btn-ghost btn-sm" onclick="verVenda('${v.id}')">Ver</button></td>
+    </tr>
+  `).join('');
+}
+
+function verVenda(id) {
+  vendaDetalheId = id;
+  const v = vendas.find(x => x.id === id);
+  const cancelarBtn = document.getElementById('btn-cancelar-venda');
+  cancelarBtn.style.display = v.cancelada ? 'none' : '';
+  cancelarBtn.onclick = () => cancelarVenda(id);
+  document.getElementById('det-venda-conteudo').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;font-size:.85rem">
+      <div><span style="color:var(--muted)">Nº:</span> <strong>#${v.num}</strong></div>
+      <div><span style="color:var(--muted)">Data:</span> ${fmtDt(v.data)}</div>
+      <div><span style="color:var(--muted)">Cliente:</span> ${v.cliente}</div>
+      <div><span style="color:var(--muted)">Telefone:</span> ${v.telefone || '–'}</div>
+      <div><span style="color:var(--muted)">Pagamento:</span> ${v.pagamento}</div>
+      <div><span style="color:var(--muted)">Status:</span> ${v.cancelada ? '<span class="badge badge-red">Cancelada</span>' : '<span class="badge badge-green">Concluída</span>'}</div>
+    </div>
+    <table style="width:100%;font-size:.83rem;margin-bottom:12px">
+      <thead><tr><th style="text-align:left;padding:6px 4px;color:var(--muted)">Item</th><th style="text-align:right;padding:6px 4px;color:var(--muted)">Qtd</th><th style="text-align:right;padding:6px 4px;color:var(--muted)">Unit.</th><th style="text-align:right;padding:6px 4px;color:var(--muted)">Total</th></tr></thead>
+      <tbody>${v.itens.map(i => `<tr><td style="padding:5px 4px">${i.nome}</td><td style="text-align:right;padding:5px 4px">${i.qty}</td><td style="text-align:right;padding:5px 4px">${brl(i.preco)}</td><td style="text-align:right;padding:5px 4px;font-weight:700">${brl(i.preco*i.qty)}</td></tr>`).join('')}</tbody>
+    </table>
+    <div style="text-align:right;font-size:.85rem">
+      ${v.desconto > 0 ? `<div>Desconto: -${brl(v.desconto)}</div>` : ''}
+      <div style="font-size:1.05rem;font-weight:800;color:var(--green)">Total: ${brl(v.total)}</div>
+    </div>
+    ${v.obs ? `<p style="margin-top:10px;font-size:.8rem;color:var(--muted)">Obs: ${v.obs}</p>` : ''}
+  `;
+  document.getElementById('overlay-venda-det').classList.add('open');
+}
+
+function cancelarVenda(id) {
+  if (!confirm('Cancelar esta venda? O estoque NÃO será automaticamente revertido.')) return;
+  const v = vendas.find(x => x.id === id);
+  v.cancelada = true;
+  salvarVendas();
+  fecharModalVenda();
+  renderHistorico();
+}
+
+function fecharModalVenda() {
+  document.getElementById('overlay-venda-det').classList.remove('open');
+}
+
+// ════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════
+function renderDashboard() {
+  const hj = hoje();
+  const mes = hj.slice(0, 7);
+  const vendasHoje = vendas.filter(v => !v.cancelada && v.data.slice(0,10) === hj);
+  const vendasMes  = vendas.filter(v => !v.cancelada && v.data.slice(0,7) === mes);
+  const totalHoje  = vendasHoje.reduce((s, v) => s + v.total, 0);
+  const totalMes   = vendasMes.reduce((s, v) => s + v.total, 0);
+  const estTot     = produtos.reduce((s, p) => s + p.estoque, 0);
+  const baixo      = produtos.filter(p => p.estoque <= p.minimo).length;
+
+  document.getElementById('dash-date').textContent = new Date().toLocaleDateString('pt-BR', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  document.getElementById('card-vendas-hoje').textContent = brl(totalHoje);
+  document.getElementById('card-qtd-hoje').textContent    = `${vendasHoje.length} pedido${vendasHoje.length !== 1 ? 's' : ''}`;
+  document.getElementById('card-fat-mes').textContent     = brl(totalMes);
+  document.getElementById('card-qtd-mes').textContent     = `${vendasMes.length} pedido${vendasMes.length !== 1 ? 's' : ''}`;
+  document.getElementById('card-produtos').textContent    = produtos.length;
+  document.getElementById('card-estoque').textContent     = estTot;
+  document.getElementById('card-baixo').textContent       = baixo;
+  document.getElementById('alert-estoque-baixo').style.display = baixo > 0 ? '' : 'none';
+
+  // chart 7 dias
+  const chart = document.getElementById('chart-7dias');
+  const dias  = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    const iso = d.toISOString().slice(0,10);
+    const tot = vendas.filter(v => !v.cancelada && v.data.slice(0,10) === iso).reduce((s, v) => s + v.total, 0);
+    dias.push({ label: d.toLocaleDateString('pt-BR', {weekday:'short'}), val: tot });
+  }
+  const maxVal = Math.max(...dias.map(d => d.val), 1);
+  chart.innerHTML = dias.map(d => `
+    <div class="bar-col">
+      <div class="bar-val">${d.val > 0 ? brl(d.val).replace('R$ ','') : ''}</div>
+      <div class="bar" style="height:${Math.round((d.val/maxVal)*100)}px"></div>
+      <div class="bar-label">${d.label}</div>
+    </div>
+  `).join('');
+
+  // últimas vendas
+  const tbody = document.getElementById('dash-vendas-recentes');
+  const ult = vendas.slice(0, 8);
+  if (!ult.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--muted)">Nenhuma venda ainda.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = ult.map(v => `<tr>
+    <td><strong>#${v.num}</strong></td>
+    <td style="font-size:.8rem">${fmtDt(v.data)}</td>
+    <td>${v.cliente}</td>
+    <td style="font-size:.8rem">${v.itens.length} item${v.itens.length !== 1 ? 's' : ''}</td>
+    <td style="font-weight:700;color:var(--green)">${brl(v.total)}</td>
+    <td><span class="badge badge-blue">${v.pagamento}</span></td>
+  </tr>`).join('');
+}
+
+// ════════════════════════════════════
+//  RELATÓRIOS
+// ════════════════════════════════════
+function renderRelatorios() {
+  const ativas = vendas.filter(v => !v.cancelada);
+  const totalGeral = ativas.reduce((s, v) => s + v.total, 0);
+  const ticket = ativas.length ? totalGeral / ativas.length : 0;
+
+  document.getElementById('rel-total').textContent      = brl(totalGeral);
+  document.getElementById('rel-qtd-vendas').textContent = `${ativas.length} vendas`;
+  document.getElementById('rel-ticket').textContent     = brl(ticket);
+
+  // produto mais vendido
+  const rankProd = {};
+  ativas.forEach(v => v.itens.forEach(i => {
+    rankProd[i.nome] = rankProd[i.nome] || { qty: 0, fat: 0 };
+    rankProd[i.nome].qty += i.qty;
+    rankProd[i.nome].fat += i.preco * i.qty;
+  }));
+  const rankArr = Object.entries(rankProd).sort((a, b) => b[1].qty - a[1].qty);
+  if (rankArr.length) {
+    document.getElementById('rel-top').textContent     = rankArr[0][0];
+    document.getElementById('rel-top-qty').textContent = rankArr[0][1].qty + ' unidades';
+  }
+
+  // forma de pagamento mais usada
+  const rankPag = {};
+  ativas.forEach(v => { rankPag[v.pagamento] = (rankPag[v.pagamento] || 0) + 1; });
+  const topPag = Object.entries(rankPag).sort((a, b) => b[1] - a[1]);
+  if (topPag.length) {
+    document.getElementById('rel-pag').textContent     = topPag[0][0];
+    document.getElementById('rel-pag-qty').textContent = topPag[0][1] + ' vendas';
+  }
+
+  // estoque baixo
+  const tbEst = document.getElementById('rel-estoque-baixo');
+  const baixos = produtos.filter(p => p.estoque <= p.minimo);
+  if (!baixos.length) {
+    tbEst.innerHTML = `<tr><td colspan="6" style="padding:24px;text-align:center;color:var(--muted)">Nenhum produto com estoque crítico.</td></tr>`;
+  } else {
+    tbEst.innerHTML = baixos.map(p => `<tr>
+      <td><code style="font-size:.78rem">${p.codigo}</code></td>
+      <td>${p.nome}</td><td>${p.tamanho}</td><td>${p.cor || '–'}</td>
+      <td style="font-weight:700;color:var(--red)">${p.estoque}</td>
+      <td>${p.minimo}</td>
+    </tr>`).join('');
+  }
+
+  // ranking
+  const tbRank = document.getElementById('rel-ranking');
+  if (!rankArr.length) {
+    tbRank.innerHTML = `<tr><td colspan="3" style="padding:24px;text-align:center;color:var(--muted)">Nenhuma venda registrada.</td></tr>`;
+  } else {
+    tbRank.innerHTML = rankArr.map(([nome, d], i) => `<tr>
+      <td>${i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : (i+1)+'. '}${nome}</td>
+      <td>${d.qty}</td>
+      <td style="font-weight:700;color:var(--green)">${brl(d.fat)}</td>
+    </tr>`).join('');
+  }
+}
+
+// ════════════════════════════════════
+//  EXPORTAR CSV
+// ════════════════════════════════════
+function exportarCSV() {
+  const rows = [['#','Data','Cliente','Telefone','Itens','Subtotal','Desconto','Total','Pagamento','Status']];
+  vendas.forEach(v => rows.push([
+    v.num, v.data.slice(0,16), v.cliente, v.telefone || '',
+    v.itens.map(i => `${i.nome} x${i.qty}`).join(' | '),
+    v.subtotal.toFixed(2), v.desconto.toFixed(2), v.total.toFixed(2),
+    v.pagamento, v.cancelada ? 'Cancelada' : 'Concluída',
+  ]));
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a   = document.createElement('a');
+  a.href    = 'data:text/csv;charset=utf-8,' + encodeURIComponent('﻿' + csv);
+  a.download = `artnbrilho-vendas-${hoje()}.csv`;
+  a.click();
+}
+
+// ════════════════════════════════════
+//  FECHAR OVERLAY AO CLICAR FORA
+// ════════════════════════════════════
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => { if (e.target === ov) ov.classList.remove('open'); });
+});
+
+// ════════════════════════════════════
+//  INIT
+// ════════════════════════════════════
+renderDashboard();
+</script>
+</body>
+</html>
