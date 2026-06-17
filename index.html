@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Artnbrilho – Controle de Estoque e Vendas</title>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -231,9 +232,57 @@
       .main { margin-left: 0; }
       body { background: #fff; color: #000; }
     }
+
+    /* ══ CALENDAR ══ */
+    .cal-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    .cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .cal-label { font-size: 1.05rem; font-weight: 700; text-transform: capitalize; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+    .cal-day-hdr { text-align: center; font-size: .7rem; color: var(--muted); padding: 6px 0; font-weight: 700; text-transform: uppercase; }
+    .cal-day { min-height: 72px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 5px; cursor: pointer; transition: background .12s; }
+    .cal-day:hover { background: rgba(232,93,4,.08); border-color: var(--brand); }
+    .cal-day.other-month { opacity: .3; pointer-events: none; }
+    .cal-day.today { border-color: var(--brand); }
+    .cal-day-num { font-size: .78rem; font-weight: 700; margin-bottom: 3px; }
+    .cal-day.today .cal-day-num { color: var(--brand); }
+    .cal-evt { font-size: .62rem; border-radius: 3px; padding: 1px 4px; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+    .evt-pedido  { background: rgba(232,93,4,.25);   color: #ffba08; }
+    .evt-envio   { background: rgba(52,152,219,.25);  color: var(--blue); }
+    .evt-entrega { background: rgba(46,204,113,.25);  color: var(--green); }
+    .evt-evento  { background: rgba(155,89,182,.25);  color: #9b59b6; }
+
+    /* ══ LABEL PREVIEW ══ */
+    .label-preview-wrap { background: var(--surface2); border-radius: 10px; padding: 20px; text-align: center; }
+    .label-preview {
+      width: 189px; height: 113px; background: #fff; color: #000;
+      border-radius: 4px; padding: 5px 7px; display: inline-flex;
+      flex-direction: column; justify-content: space-between;
+      box-shadow: 0 3px 14px rgba(0,0,0,.35);
+    }
+    .label-preview .lp-nome { font-size: 8pt; font-weight: 700; line-height: 1.2; font-family: Arial, sans-serif; }
+    .label-preview .lp-info { font-size: 6.5pt; color: #555; font-family: Arial, sans-serif; }
+    .label-preview .lp-code { text-align: center; overflow: hidden; max-height: 40px; }
+    .label-preview .lp-preco { font-size: 9.5pt; font-weight: 900; font-family: Arial, sans-serif; }
+
+    /* ══ IMG THUMB ══ */
+    .prod-thumb { width: 40px; height: 40px; object-fit: cover; border-radius: 5px; }
+    .prod-thumb-ph { width: 40px; height: 40px; border-radius: 5px; background: var(--surface2); display: flex; align-items: center; justify-content: center; font-size: .55rem; color: var(--muted); text-align: center; line-height: 1.2; border: 1px solid var(--border); }
+    .img-upload-wrap { border: 2px dashed var(--border); border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; transition: border-color .15s; }
+    .img-upload-wrap:hover { border-color: var(--brand); }
+    .img-upload-wrap input { display: none; }
+    .img-upload-preview { max-width: 120px; max-height: 100px; border-radius: 6px; margin-top: 8px; display: none; }
   </style>
 </head>
 <body>
+
+<datalist id="datalist-cores">
+  <option value="Preto"><option value="Branco"><option value="Cinza"><option value="Cinza Mescla">
+  <option value="Azul Royal"><option value="Azul Marinho"><option value="Azul Bebê"><option value="Azul Turquesa">
+  <option value="Vermelho"><option value="Vinho"><option value="Rosa"><option value="Rosa Claro">
+  <option value="Roxo"><option value="Lilás"><option value="Verde"><option value="Verde Militar">
+  <option value="Verde Oliva"><option value="Amarelo"><option value="Laranja"><option value="Marrom">
+  <option value="Caramelo"><option value="Bege"><option value="Nude"><option value="Off White">
+</datalist>
 
 <!-- ══════════════════════════════════════
      TELAS DE AUTENTICAÇÃO
@@ -412,6 +461,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         <span>Estoque</span>
       </div>
+      <div class="nav-item" onclick="navigate('etiquetas')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1.5" fill="currentColor"/></svg>
+        <span>Etiquetas</span>
+      </div>
       <div class="nav-item" onclick="navigate('vendas')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         <span>Nova Venda</span>
@@ -423,6 +476,10 @@
       <div class="nav-item" onclick="navigate('relatorios')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span>Relatórios</span>
+      </div>
+      <div class="nav-item" onclick="navigate('calendario')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Calendário</span>
       </div>
       <div class="nav-sep"></div>
       <div class="nav-item" id="nav-usuarios-item" onclick="navigate('usuarios')" style="display:none">
@@ -476,8 +533,10 @@
         <input type="text" id="busca-produto" placeholder="Buscar produto…" oninput="renderProdutos()">
         <select id="filtro-cat" onchange="renderProdutos()">
           <option value="">Todas as categorias</option>
-          <option>Camiseta Básica</option><option>Camiseta Estampada</option>
-          <option>Regata</option><option>Polo</option><option>Moletom</option><option>Acessório</option>
+          <option>Camiseta Básica</option><option>Camiseta Estampada</option><option>Camiseta Oversized</option>
+          <option>Baby Look</option><option>Cropped</option><option>Regata</option>
+          <option>Polo</option><option>Moletom</option><option>Blusa de Frio</option>
+          <option>Calça</option><option>Short/Bermuda</option><option>Acessório</option>
         </select>
         <button class="btn btn-primary" onclick="abrirModalProduto()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -485,14 +544,20 @@
         </button>
       </div>
       <div class="table-wrap">
-        <table><thead><tr><th>Código</th><th>Produto</th><th>Categoria</th><th>Tam.</th><th>Cor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+        <table><thead><tr><th></th><th>Código</th><th>Produto</th><th>Modelo</th><th>Categoria</th><th>Tam.</th><th>Cor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
         <tbody id="tabela-produtos"></tbody></table>
       </div>
     </div>
 
     <!-- ESTOQUE -->
     <div id="page-estoque" class="page">
-      <div class="page-header"><h2>Movimentação de Estoque</h2><p>Entradas e saídas de produtos</p></div>
+      <div class="page-header"><h2>Estoque</h2><p>Inventário e movimentações de produtos</p></div>
+      <div class="section-title">Inventário de Produtos</div>
+      <div class="table-wrap" style="margin-bottom:24px">
+        <table><thead><tr><th>Imagem</th><th>Produto</th><th>Modelo</th><th>Categoria</th><th>Tamanho</th><th>Cor</th><th>Quantidade</th><th>Status</th><th>Ação</th></tr></thead>
+        <tbody id="tabela-estoque-inv"></tbody></table>
+      </div>
+      <div class="section-title">Registrar Movimentação</div>
       <div class="toolbar">
         <select id="mov-produto" style="flex:1;min-width:200px"><option value="">Selecione o produto…</option></select>
         <select id="mov-tipo"><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ajuste">Ajuste</option></select>
@@ -582,6 +647,75 @@
       </div>
     </div>
 
+    <!-- ETIQUETAS -->
+    <div id="page-etiquetas" class="page">
+      <div class="page-header"><h2>Etiquetas</h2><p>Impressão de etiquetas 50×30mm com código de barras ou QR code</p></div>
+      <div style="display:grid;grid-template-columns:1fr 240px;gap:28px;align-items:start">
+        <div>
+          <div class="form-group">
+            <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px">Produto</label>
+            <select id="etiq-produto" onchange="previewEtiqueta()" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:.85rem">
+              <option value="">Selecione um produto…</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px">Tipo de código</label>
+              <select id="etiq-tipo" onchange="previewEtiqueta()" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:.85rem">
+                <option value="barcode">Código de Barras (Code128)</option>
+                <option value="qrcode">QR Code</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label style="font-size:.8rem;color:var(--muted);display:block;margin-bottom:5px">Quantidade de etiquetas</label>
+              <input type="number" id="etiq-qty" value="1" min="1" max="100" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:9px 12px;font-size:.85rem">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="imprimirEtiqueta()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Imprimir Etiqueta(s)
+          </button>
+        </div>
+        <div>
+          <div class="section-title">Pré-visualização</div>
+          <div class="label-preview-wrap">
+            <div class="label-preview" id="etiq-preview">
+              <div class="lp-nome" id="etiq-lbl-nome" style="color:#888">Selecione um produto</div>
+              <div class="lp-info" id="etiq-lbl-info"></div>
+              <div class="lp-code" id="etiq-lbl-codigo"></div>
+              <div class="lp-preco" id="etiq-lbl-preco"></div>
+            </div>
+            <div style="font-size:.68rem;color:var(--muted);margin-top:8px">50mm × 30mm</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CALENDÁRIO -->
+    <div id="page-calendario" class="page">
+      <div class="page-header"><h2>Calendário</h2><p>Eventos, pedidos e envios</p></div>
+      <div class="cal-wrap">
+        <div class="cal-header">
+          <button class="btn btn-ghost btn-sm" onclick="mudarMes(-1)">&#8592; Anterior</button>
+          <span class="cal-label" id="cal-label"></span>
+          <button class="btn btn-ghost btn-sm" onclick="mudarMes(1)">Próximo &#8594;</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-day-hdr">Dom</div><div class="cal-day-hdr">Seg</div>
+          <div class="cal-day-hdr">Ter</div><div class="cal-day-hdr">Qua</div>
+          <div class="cal-day-hdr">Qui</div><div class="cal-day-hdr">Sex</div>
+          <div class="cal-day-hdr">Sáb</div>
+        </div>
+        <div class="cal-grid" id="cal-grid" style="margin-top:3px"></div>
+      </div>
+      <div style="margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;font-size:.78rem">
+        <span><span class="cal-evt evt-pedido">■</span> Pedido</span>
+        <span><span class="cal-evt evt-envio">■</span> Envio</span>
+        <span><span class="cal-evt evt-entrega">■</span> Entrega</span>
+        <span><span class="cal-evt evt-evento">■</span> Evento</span>
+      </div>
+    </div>
+
     <!-- USUÁRIOS (admin) -->
     <div id="page-usuarios" class="page">
       <div class="page-header"><h2>Gerenciar Usuários</h2><p>Controle de acesso ao sistema</p></div>
@@ -647,19 +781,33 @@
   <div class="modal">
     <h3 id="modal-prod-titulo">Novo Produto</h3>
     <input type="hidden" id="prod-id">
+    <input type="hidden" id="prod-imagem">
     <div class="form-row">
       <div class="form-group"><label>Código *</label><input type="text" id="prod-codigo" placeholder="Ex: ART-001"></div>
       <div class="form-group"><label>Categoria *</label>
-        <select id="prod-categoria"><option>Camiseta Básica</option><option>Camiseta Estampada</option><option>Regata</option><option>Polo</option><option>Moletom</option><option>Acessório</option></select>
+        <select id="prod-categoria">
+          <option>Camiseta Básica</option><option>Camiseta Estampada</option><option>Camiseta Oversized</option>
+          <option>Baby Look</option><option>Cropped</option><option>Regata</option>
+          <option>Polo</option><option>Moletom</option><option>Blusa de Frio</option>
+          <option>Calça</option><option>Short/Bermuda</option><option>Acessório</option>
+        </select>
       </div>
     </div>
     <div class="form-group"><label>Nome do Produto *</label><input type="text" id="prod-nome" placeholder="Ex: Camiseta Básica Preta"></div>
+    <div class="form-group"><label>Modelo</label><input type="text" id="prod-modelo" placeholder="Ex: Streetwear, Urban, Classic…"></div>
+    <div class="form-group"><label>Imagem do Produto</label>
+      <div class="img-upload-wrap" onclick="document.getElementById('prod-imagem-file').click()">
+        <input type="file" id="prod-imagem-file" accept="image/*" onchange="previewImagem(this)">
+        <div id="img-upload-hint" style="font-size:.8rem;color:var(--muted)">Clique para selecionar imagem</div>
+        <img id="prod-imagem-preview" class="img-upload-preview" alt="preview">
+      </div>
+    </div>
     <div class="form-group"><label>Descrição</label><textarea id="prod-descricao" rows="2" placeholder="Detalhes…"></textarea></div>
     <div class="form-row">
       <div class="form-group"><label>Tamanho</label>
         <select id="prod-tamanho"><option>Único</option><option>PP</option><option>P</option><option>M</option><option>G</option><option>GG</option><option>XGG</option></select>
       </div>
-      <div class="form-group"><label>Cor</label><input type="text" id="prod-cor" placeholder="Ex: Preto"></div>
+      <div class="form-group"><label>Cor</label><input type="text" id="prod-cor" list="datalist-cores" placeholder="Ex: Preto" autocomplete="off"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Preço de Venda (R$) *</label><input type="number" id="prod-preco" placeholder="0,00" min="0" step="0.01"></div>
@@ -672,6 +820,32 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalProduto()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EVENTO -->
+<div class="overlay" id="overlay-evento">
+  <div class="modal" style="max-width:420px">
+    <h3 id="modal-evt-titulo">Novo Evento</h3>
+    <input type="hidden" id="evt-id">
+    <div class="form-group"><label>Data *</label><input type="date" id="evt-data"></div>
+    <div class="form-group"><label>Título *</label><input type="text" id="evt-titulo" placeholder="Ex: Envio pedido #10"></div>
+    <div class="form-group"><label>Tipo</label>
+      <select id="evt-tipo">
+        <option value="pedido">Pedido</option>
+        <option value="envio">Envio</option>
+        <option value="entrega">Entrega</option>
+        <option value="evento">Evento</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Observações</label><textarea id="evt-obs" rows="2" placeholder="Detalhes…"></textarea></div>
+    <div class="modal-footer" style="justify-content:space-between">
+      <button class="btn btn-danger btn-sm" id="btn-excluir-evt" onclick="excluirEvento()" style="display:none">Excluir</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-ghost" onclick="fecharModalEvento()">Cancelar</button>
+        <button class="btn btn-primary" onclick="salvarEvento()">Salvar</button>
+      </div>
     </div>
   </div>
 </div>
@@ -739,9 +913,12 @@ let produtos   = JSON.parse(localStorage.getItem('ab_produtos')   || '[]');
 let movimentos = JSON.parse(localStorage.getItem('ab_movimentos') || '[]');
 let vendas     = JSON.parse(localStorage.getItem('ab_vendas')     || '[]');
 let usuarios   = JSON.parse(localStorage.getItem('ab_usuarios')   || '[]');
+let eventos    = JSON.parse(localStorage.getItem('ab_eventos')    || '[]');
 let sessaoAtual = JSON.parse(sessionStorage.getItem('ab_sessao')  || 'null');
 let carrinhoVenda = [];
 let editandoProdutoId = null;
+let calAno = new Date().getFullYear();
+let calMes = new Date().getMonth();
 
 // ═══════════════════════════════════════════════════
 //  UTIL
@@ -750,6 +927,7 @@ const salvarProdutos   = () => localStorage.setItem('ab_produtos',   JSON.string
 const salvarMovimentos = () => localStorage.setItem('ab_movimentos', JSON.stringify(movimentos));
 const salvarVendas     = () => localStorage.setItem('ab_vendas',     JSON.stringify(vendas));
 const salvarUsuarios   = () => localStorage.setItem('ab_usuarios',   JSON.stringify(usuarios));
+const salvarEventos    = () => localStorage.setItem('ab_eventos',    JSON.stringify(eventos));
 const salvarSessao     = () => sessaoAtual
   ? sessionStorage.setItem('ab_sessao', JSON.stringify(sessaoAtual))
   : sessionStorage.removeItem('ab_sessao');
@@ -786,8 +964,8 @@ function clearAuthMsgs(...ids) {
 const PERFIL_LABEL = { admin: 'Administrador', operador: 'Operador', vendedor: 'Vendedor' };
 
 const PAGINAS_PERMITIDAS = {
-  admin:    ['dashboard','produtos','estoque','vendas','historico','relatorios','usuarios','minha-conta'],
-  operador: ['dashboard','produtos','estoque','vendas','historico','relatorios','minha-conta'],
+  admin:    ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','usuarios','minha-conta'],
+  operador: ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','minha-conta'],
   vendedor: ['dashboard','vendas','historico','minha-conta'],
 };
 
@@ -954,8 +1132,8 @@ function iniciarApp() {
 // ═══════════════════════════════════════════════════
 //  NAVEGAÇÃO
 // ═══════════════════════════════════════════════════
-const TODAS_PAGINAS = ['dashboard','produtos','estoque','vendas','historico','relatorios','usuarios','minha-conta'];
-const NAV_ITEMS     = ['dashboard','produtos','estoque','vendas','historico','relatorios','usuarios','minha-conta'];
+const TODAS_PAGINAS = ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','usuarios','minha-conta'];
+const NAV_ITEMS     = ['dashboard','produtos','estoque','etiquetas','vendas','historico','relatorios','calendario','usuarios','minha-conta'];
 
 function navigate(page) {
   const perfil    = sessaoAtual?.perfil || 'vendedor';
@@ -984,10 +1162,12 @@ function navigate(page) {
   const renders = {
     dashboard:    renderDashboard,
     produtos:     renderProdutos,
-    estoque:      () => { populateSelects(); renderMovimentos(); },
+    estoque:      () => { renderEstoqueInventario(); populateSelects(); renderMovimentos(); },
+    etiquetas:    renderEtiquetas,
     vendas:       () => { populateSelects(); calcularTotal(); },
     historico:    renderHistorico,
     relatorios:   renderRelatorios,
+    calendario:   renderCalendario,
     usuarios:     renderUsuarios,
     'minha-conta': renderMinhaConta,
   };
@@ -1151,23 +1331,44 @@ function excluirUsuario(id) {
 // ═══════════════════════════════════════════════════
 //  PRODUTOS
 // ═══════════════════════════════════════════════════
+function previewImagem(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (file.size > 2097152) { alert('Imagem muito grande. Use uma imagem menor que 2MB.'); input.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const prev = document.getElementById('prod-imagem-preview');
+    prev.src = e.target.result; prev.style.display = 'block';
+    document.getElementById('img-upload-hint').style.display = 'none';
+    document.getElementById('prod-imagem').value = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 function abrirModalProduto(id = null) {
   editandoProdutoId = id;
   const el = v => document.getElementById(v);
+  const prev = el('prod-imagem-preview');
   if (id) {
     const p = produtos.find(x => x.id === id);
     el('modal-prod-titulo').textContent = 'Editar Produto';
     el('prod-id').value = p.id; el('prod-codigo').value = p.codigo;
     el('prod-categoria').value = p.categoria; el('prod-nome').value = p.nome;
+    el('prod-modelo').value = p.modelo||'';
     el('prod-descricao').value = p.descricao||''; el('prod-tamanho').value = p.tamanho;
-    el('prod-cor').value = p.cor; el('prod-preco').value = p.preco;
+    el('prod-cor').value = p.cor||''; el('prod-preco').value = p.preco;
     el('prod-custo').value = p.custo||''; el('prod-estoque').value = p.estoque;
     el('prod-minimo').value = p.minimo;
+    el('prod-imagem').value = p.imagem||'';
+    if (p.imagem) { prev.src = p.imagem; prev.style.display='block'; el('img-upload-hint').style.display='none'; }
+    else { prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display=''; }
   } else {
     el('modal-prod-titulo').textContent = 'Novo Produto';
-    ['prod-id','prod-codigo','prod-nome','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque'].forEach(f=>el(f).value='');
+    ['prod-id','prod-codigo','prod-nome','prod-modelo','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque','prod-imagem'].forEach(f=>el(f).value='');
     el('prod-categoria').value='Camiseta Básica'; el('prod-tamanho').value='M';
     el('prod-minimo').value='5'; el('prod-estoque').value='0';
+    prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display='';
+    el('prod-imagem-file').value='';
   }
   document.getElementById('overlay-produto').classList.add('open');
 }
@@ -1177,14 +1378,15 @@ function salvarProduto() {
   const v = id => document.getElementById(id).value.trim();
   if (!v('prod-codigo')||!v('prod-nome')||!v('prod-preco')) { alert('Preencha código, nome e preço.'); return; }
   const estoqueQty = parseInt(v('prod-estoque'))||0;
+  const imagem = document.getElementById('prod-imagem').value;
   if (editandoProdutoId) {
     const p = produtos.find(x=>x.id===editandoProdutoId);
     const diff = estoqueQty - p.estoque;
-    Object.assign(p,{codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0});
+    Object.assign(p,{codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem});
     if(diff!==0) registrarMovimentoInterno(editandoProdutoId,'ajuste',Math.abs(diff),diff>=0?'Ajuste positivo (edição)':'Ajuste negativo (edição)',estoqueQty-diff);
   } else {
     const novoId=genId();
-    produtos.push({id:novoId,codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,criadoEm:agora()});
+    produtos.push({id:novoId,codigo:v('prod-codigo'),categoria:v('prod-categoria'),nome:v('prod-nome'),modelo:v('prod-modelo'),descricao:v('prod-descricao'),tamanho:v('prod-tamanho'),cor:v('prod-cor'),preco:parseFloat(v('prod-preco'))||0,custo:parseFloat(v('prod-custo'))||0,estoque:estoqueQty,minimo:parseInt(document.getElementById('prod-minimo').value)||0,imagem,criadoEm:agora()});
     if(estoqueQty>0) registrarMovimentoInterno(novoId,'entrada',estoqueQty,'Estoque inicial',0);
   }
   salvarProdutos(); fecharModalProduto(); renderProdutos();
@@ -1200,12 +1402,15 @@ function renderProdutos() {
   const cat=document.getElementById('filtro-cat').value||'';
   const tbody=document.getElementById('tabela-produtos');
   const filtrados=produtos.filter(p=>(!busca||p.nome.toLowerCase().includes(busca)||p.codigo.toLowerCase().includes(busca)||(p.cor||'').toLowerCase().includes(busca))&&(!cat||p.categoria===cat));
-  if(!filtrados.length){tbody.innerHTML=`<tr><td colspan="9" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;return;}
+  if(!filtrados.length){tbody.innerHTML=`<tr><td colspan="11" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;return;}
   tbody.innerHTML=filtrados.map(p=>{
     const sb=p.estoque===0?'<span class="badge badge-gray">Sem estoque</span>':p.estoque<=p.minimo?'<span class="badge badge-red">Baixo</span>':'<span class="badge badge-green">OK</span>';
+    const thumb=p.imagem?`<img src="${p.imagem}" class="prod-thumb" alt="">`:`<div class="prod-thumb-ph">sem<br>img</div>`;
     return `<tr>
+      <td style="width:50px">${thumb}</td>
       <td><code style="font-size:.78rem;color:var(--muted)">${p.codigo}</code></td>
       <td><strong>${p.nome}</strong>${p.descricao?`<br><small style="color:var(--muted)">${p.descricao}</small>`:''}</td>
+      <td style="color:var(--muted);font-size:.83rem">${p.modelo||'–'}</td>
       <td>${p.categoria}</td><td><span class="badge badge-blue">${p.tamanho}</span></td>
       <td>${p.cor||'–'}</td><td>${brl(p.preco)}</td>
       <td style="font-weight:700;color:${p.estoque<=p.minimo?'var(--red)':'var(--green)'}">${p.estoque}</td>
@@ -1244,7 +1449,7 @@ function registrarMovimento() {
   else if(tipo==='saida'){if(prod.estoque<qty){alert('Estoque insuficiente!');return;}prod.estoque-=qty;}
   else prod.estoque=qty;
   registrarMovimentoInterno(prodId,tipo,qty,obs||'–',antes);
-  salvarProdutos();populateSelects();renderMovimentos();
+  salvarProdutos();renderEstoqueInventario();populateSelects();renderMovimentos();
   document.getElementById('mov-qty').value='';document.getElementById('mov-obs').value='';
 }
 
@@ -1454,6 +1659,201 @@ function exportarCSV() {
   const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent('﻿'+csv);a.download=`artnbrilho-vendas-${hoje()}.csv`;a.click();
 }
+
+// ═══════════════════════════════════════════════════
+//  ESTOQUE – INVENTÁRIO
+// ═══════════════════════════════════════════════════
+function renderEstoqueInventario() {
+  const tbody = document.getElementById('tabela-estoque-inv');
+  if (!produtos.length) {
+    tbody.innerHTML=`<tr><td colspan="9" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto cadastrado. Adicione produtos primeiro.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = produtos.map(p => {
+    const thumb = p.imagem
+      ? `<img src="${p.imagem}" class="prod-thumb" alt="">`
+      : `<div class="prod-thumb-ph">sem<br>img</div>`;
+    const status = p.estoque===0
+      ? '<span class="badge badge-gray">Sem estoque</span>'
+      : p.estoque<=p.minimo
+        ? '<span class="badge badge-red">Baixo</span>'
+        : '<span class="badge badge-green">OK</span>';
+    return `<tr>
+      <td style="width:50px">${thumb}</td>
+      <td><strong>${p.nome}</strong><br><code style="font-size:.72rem;color:var(--muted)">${p.codigo}</code></td>
+      <td style="color:var(--muted);font-size:.83rem">${p.modelo||'–'}</td>
+      <td style="font-size:.82rem">${p.categoria}</td>
+      <td><span class="badge badge-blue">${p.tamanho}</span></td>
+      <td style="font-size:.83rem">${p.cor||'–'}</td>
+      <td style="font-weight:700;color:${p.estoque<=p.minimo?'var(--red)':'var(--green)'}">${p.estoque}</td>
+      <td>${status}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="irParaEtiqueta('${p.id}')">Etiqueta</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function irParaEtiqueta(prodId) {
+  navigate('etiquetas');
+  setTimeout(() => {
+    const sel = document.getElementById('etiq-produto');
+    if (sel) { sel.value = prodId; previewEtiqueta(); }
+  }, 80);
+}
+
+// ═══════════════════════════════════════════════════
+//  ETIQUETAS
+// ═══════════════════════════════════════════════════
+function renderEtiquetas() {
+  const sel = document.getElementById('etiq-produto');
+  const opts = produtos.map(p=>`<option value="${p.id}">${p.codigo} – ${p.modelo||p.nome} (${p.tamanho}${p.cor?'/'+p.cor:''})</option>`).join('');
+  sel.innerHTML = '<option value="">Selecione um produto…</option>' + opts;
+  ['etiq-lbl-nome','etiq-lbl-info','etiq-lbl-preco'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent='';});
+  const ec=document.getElementById('etiq-lbl-codigo');if(ec)ec.innerHTML='';
+  document.getElementById('etiq-lbl-nome').textContent='Selecione um produto';
+  document.getElementById('etiq-lbl-nome').style.color='#888';
+}
+
+function previewEtiqueta() {
+  const prodId = document.getElementById('etiq-produto').value;
+  const nomeEl = document.getElementById('etiq-lbl-nome');
+  if (!prodId) {
+    nomeEl.textContent='Selecione um produto'; nomeEl.style.color='#888';
+    ['etiq-lbl-info','etiq-lbl-preco'].forEach(id=>document.getElementById(id).textContent='');
+    document.getElementById('etiq-lbl-codigo').innerHTML='';
+    return;
+  }
+  const prod = produtos.find(p=>p.id===prodId);
+  const tipo = document.getElementById('etiq-tipo').value;
+  nomeEl.textContent = prod.modelo||prod.nome; nomeEl.style.color='#000';
+  document.getElementById('etiq-lbl-info').textContent = `Tam: ${prod.tamanho} | Cor: ${prod.cor||'–'}`;
+  document.getElementById('etiq-lbl-preco').textContent = brl(prod.preco);
+  const codigoEl = document.getElementById('etiq-lbl-codigo');
+  if (tipo==='barcode') {
+    codigoEl.innerHTML = '<canvas id="bc-preview" style="max-width:100%"></canvas>';
+    try {
+      if(typeof JsBarcode!=='undefined') JsBarcode('#bc-preview',prod.codigo,{format:'CODE128',width:1,height:18,displayValue:true,fontSize:6,margin:0,background:'#ffffff',lineColor:'#000000'});
+      else codigoEl.innerHTML=`<div style="font-size:8px;font-family:monospace;color:#000">${prod.codigo}</div>`;
+    } catch(e) { codigoEl.innerHTML=`<div style="font-size:8px;font-family:monospace;color:#000">${prod.codigo}</div>`; }
+  } else {
+    const data=encodeURIComponent(`${prod.codigo}|${prod.modelo||prod.nome}|${prod.tamanho}|${prod.cor||''}|${brl(prod.preco)}`);
+    codigoEl.innerHTML=`<img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${data}&color=000000&bgcolor=ffffff" width="46" height="46" alt="QR">`;
+  }
+}
+
+function imprimirEtiqueta() {
+  const prodId = document.getElementById('etiq-produto').value;
+  if (!prodId) { alert('Selecione um produto.'); return; }
+  const prod = produtos.find(p=>p.id===prodId);
+  const tipo = document.getElementById('etiq-tipo').value;
+  const qty  = Math.max(1,Math.min(100,parseInt(document.getElementById('etiq-qty').value)||1));
+  const nome = prod.modelo||prod.nome;
+  const info = `Tam: ${prod.tamanho} | Cor: ${prod.cor||'–'}`;
+  const preco = brl(prod.preco);
+  const data  = encodeURIComponent(`${prod.codigo}|${nome}|${prod.tamanho}|${prod.cor||''}|${preco}`);
+  const codigoHtml = tipo==='barcode'
+    ? `<canvas class="bc" data-code="${prod.codigo.replace(/"/g,'')}" style="max-width:46mm"></canvas>`
+    : `<img src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${data}&color=000000&bgcolor=ffffff" width="42" height="42">`;
+  const label = `<div class="etiqueta"><div class="l-nome">${nome}</div><div class="l-info">${info}</div><div class="l-code">${codigoHtml}</div><div class="l-preco">${preco}</div></div>`;
+  const win = window.open('','_blank','width=500,height=400');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+@page{size:50mm 30mm;margin:0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif}
+.etiqueta{width:50mm;height:30mm;padding:1.5mm 2mm;display:flex;flex-direction:column;justify-content:space-between;page-break-after:always}
+.etiqueta:last-child{page-break-after:avoid}
+.l-nome{font-size:7.5pt;font-weight:700;line-height:1.1}
+.l-info{font-size:6pt;color:#555}
+.l-code{overflow:hidden;text-align:left}
+.l-preco{font-size:9pt;font-weight:900}
+</style>
+${tipo==='barcode'?'<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>':''}
+</head><body>
+${Array(qty).fill(label).join('')}
+<script>
+${tipo==='barcode'?`document.querySelectorAll('.bc').forEach(c=>{try{JsBarcode(c,c.dataset.code,{format:'CODE128',width:1.2,height:22,displayValue:true,fontSize:7,margin:0});}catch(e){}});`:''}
+window.onload=()=>setTimeout(()=>window.print(),400);
+<\/script>
+</body></html>`);
+  win.document.close();
+}
+
+// ═══════════════════════════════════════════════════
+//  CALENDÁRIO
+// ═══════════════════════════════════════════════════
+function renderCalendario() {
+  const meses=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  document.getElementById('cal-label').textContent = `${meses[calMes]} de ${calAno}`;
+  const primeiroDia = new Date(calAno,calMes,1).getDay();
+  const diasMes     = new Date(calAno,calMes+1,0).getDate();
+  const diasAnt     = new Date(calAno,calMes,0).getDate();
+  const hjStr = hoje();
+  let cells = '';
+  for(let i=primeiroDia-1;i>=0;i--) cells+=`<div class="cal-day other-month"><div class="cal-day-num">${diasAnt-i}</div></div>`;
+  for(let d=1;d<=diasMes;d++){
+    const iso=`${calAno}-${String(calMes+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evts=eventos.filter(e=>e.data===iso);
+    cells+=`<div class="cal-day${iso===hjStr?' today':''}" onclick="abrirModalEvento('${iso}')">
+      <div class="cal-day-num">${d}</div>
+      ${evts.slice(0,3).map(e=>`<div class="cal-evt evt-${e.tipo}" onclick="event.stopPropagation();abrirVerEvento('${e.id}')" title="${e.titulo}">${e.titulo}</div>`).join('')}
+      ${evts.length>3?`<div style="font-size:.58rem;color:var(--muted)">+${evts.length-3}</div>`:''}
+    </div>`;
+  }
+  const resto=(primeiroDia+diasMes)%7;
+  if(resto>0) for(let d=1;d<=7-resto;d++) cells+=`<div class="cal-day other-month"><div class="cal-day-num">${d}</div></div>`;
+  document.getElementById('cal-grid').innerHTML=cells;
+}
+
+function mudarMes(delta){
+  calMes+=delta;
+  if(calMes<0){calMes=11;calAno--;}
+  if(calMes>11){calMes=0;calAno++;}
+  renderCalendario();
+}
+
+function abrirModalEvento(data=''){
+  document.getElementById('modal-evt-titulo').textContent='Novo Evento';
+  document.getElementById('evt-id').value='';
+  document.getElementById('evt-data').value=data||hoje();
+  document.getElementById('evt-titulo').value='';
+  document.getElementById('evt-tipo').value='evento';
+  document.getElementById('evt-obs').value='';
+  document.getElementById('btn-excluir-evt').style.display='none';
+  document.getElementById('overlay-evento').classList.add('open');
+}
+
+function abrirVerEvento(id){
+  const e=eventos.find(x=>x.id===id);if(!e)return;
+  document.getElementById('modal-evt-titulo').textContent='Editar Evento';
+  document.getElementById('evt-id').value=e.id;
+  document.getElementById('evt-data').value=e.data;
+  document.getElementById('evt-titulo').value=e.titulo;
+  document.getElementById('evt-tipo').value=e.tipo;
+  document.getElementById('evt-obs').value=e.obs||'';
+  document.getElementById('btn-excluir-evt').style.display='';
+  document.getElementById('overlay-evento').classList.add('open');
+}
+
+function salvarEvento(){
+  const id=document.getElementById('evt-id').value;
+  const titulo=document.getElementById('evt-titulo').value.trim();
+  const data=document.getElementById('evt-data').value;
+  const tipo=document.getElementById('evt-tipo').value;
+  const obs=document.getElementById('evt-obs').value.trim();
+  if(!titulo||!data){alert('Preencha título e data.');return;}
+  if(id){const e=eventos.find(x=>x.id===id);Object.assign(e,{titulo,data,tipo,obs});}
+  else eventos.push({id:genId(),titulo,data,tipo,obs,criadoEm:agora()});
+  salvarEventos();fecharModalEvento();renderCalendario();
+}
+
+function excluirEvento(){
+  const id=document.getElementById('evt-id').value;
+  if(!id||!confirm('Excluir este evento?'))return;
+  eventos=eventos.filter(e=>e.id!==id);
+  salvarEventos();fecharModalEvento();renderCalendario();
+}
+
+function fecharModalEvento(){document.getElementById('overlay-evento').classList.remove('open');}
 
 // ═══════════════════════════════════════════════════
 //  FECHAR OVERLAY AO CLICAR FORA
