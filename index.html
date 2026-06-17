@@ -1006,6 +1006,11 @@ function seedProdutosDemo() {
     {codigo:'ART-004',nome:'Saia Plissada',modelo:'Plissê Urban',categoria:'Short/Bermuda',tamanho:'G',cor:'Preto',preco:89.90,custo:35,estoque:0,minimo:2,descricao:'',imagem:''},
     {codigo:'ART-005',nome:'Camiseta Básica',modelo:'Essential',categoria:'Camiseta Básica',tamanho:'M',cor:'Branco',preco:49.90,custo:18,estoque:15,minimo:3,descricao:'',imagem:''},
     {codigo:'ART-006',nome:'Camiseta Estampada',modelo:'Streetwear',categoria:'Camiseta Estampada',tamanho:'G',cor:'Preto',preco:69.90,custo:25,estoque:10,minimo:3,descricao:'',imagem:''},
+    {codigo:'ART-007',nome:'Broche Urso Cristal',modelo:'Crystal Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:39.90,custo:15,estoque:5,minimo:2,descricao:'Broche urso com strass e estrutura dourada',imagem:''},
+    {codigo:'ART-008',nome:'Broche Guirlanda Cristal',modelo:'Crystal Wreath',categoria:'Acessório',tamanho:'Único',cor:'Rosa',preco:35.90,custo:12,estoque:6,minimo:2,descricao:'Broche guirlanda com pedras rosa e strass',imagem:''},
+    {codigo:'ART-009',nome:'Brinco Urso com Pérola',modelo:'Pearl Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:49.90,custo:20,estoque:4,minimo:2,descricao:'Par de brincos urso com strass e pingente de pérola',imagem:''},
+    {codigo:'ART-010',nome:'Broche Abelha',modelo:'Bee Pin',categoria:'Acessório',tamanho:'Único',cor:'Preto/Dourado',preco:29.90,custo:10,estoque:8,minimo:2,descricao:'Broche abelha com esmalte preto e asas em rosa',imagem:''},
+    {codigo:'ART-011',nome:'Broche Gota Dourada',modelo:'Drop Gold',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:45.90,custo:18,estoque:3,minimo:2,descricao:'Broche gota metalizada com acabamento espelhado',imagem:''},
   ];
   demo.forEach(p => {
     const id = genId();
@@ -1013,6 +1018,36 @@ function seedProdutosDemo() {
     if(p.estoque>0) registrarMovimentoInterno(id,'entrada',p.estoque,'Estoque inicial',0);
   });
   salvarProdutos();
+  localStorage.setItem('ab_seed_v','2');
+}
+
+function gerarCodigoProduto() {
+  let max = 0;
+  produtos.forEach(p => {
+    const m = (p.codigo||'').match(/^ART-(\d+)$/i);
+    if (m) max = Math.max(max, parseInt(m[1]));
+  });
+  return 'ART-' + String(max + 1).padStart(3, '0');
+}
+
+function seedAcessoriosV2() {
+  if (parseInt(localStorage.getItem('ab_seed_v')||'0') >= 2) return;
+  const acessorios = [
+    {codigo:'ART-007',nome:'Broche Urso Cristal',modelo:'Crystal Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:39.90,custo:15,estoque:5,minimo:2,descricao:'Broche urso com strass e estrutura dourada'},
+    {codigo:'ART-008',nome:'Broche Guirlanda Cristal',modelo:'Crystal Wreath',categoria:'Acessório',tamanho:'Único',cor:'Rosa',preco:35.90,custo:12,estoque:6,minimo:2,descricao:'Broche guirlanda com pedras rosa e strass'},
+    {codigo:'ART-009',nome:'Brinco Urso com Pérola',modelo:'Pearl Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:49.90,custo:20,estoque:4,minimo:2,descricao:'Par de brincos urso com strass e pingente de pérola'},
+    {codigo:'ART-010',nome:'Broche Abelha',modelo:'Bee Pin',categoria:'Acessório',tamanho:'Único',cor:'Preto/Dourado',preco:29.90,custo:10,estoque:8,minimo:2,descricao:'Broche abelha com esmalte preto e asas em rosa'},
+    {codigo:'ART-011',nome:'Broche Gota Dourada',modelo:'Drop Gold',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:45.90,custo:18,estoque:3,minimo:2,descricao:'Broche gota metalizada com acabamento espelhado'},
+  ];
+  const codigos = new Set(produtos.map(p => p.codigo));
+  acessorios.forEach(a => {
+    if (codigos.has(a.codigo)) return;
+    const id = genId();
+    produtos.push({id,...a,imagem:'',criadoEm:agora()});
+    if(a.estoque>0) registrarMovimentoInterno(id,'entrada',a.estoque,'Estoque inicial',0);
+  });
+  salvarProdutos();
+  localStorage.setItem('ab_seed_v','2');
 }
 
 // ═══════════════════════════════════════════════════
@@ -1395,7 +1430,8 @@ function abrirModalProduto(id = null) {
     else { prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display=''; }
   } else {
     el('modal-prod-titulo').textContent = 'Novo Produto';
-    ['prod-id','prod-codigo','prod-nome','prod-modelo','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque','prod-imagem'].forEach(f=>el(f).value='');
+    ['prod-id','prod-nome','prod-modelo','prod-descricao','prod-cor','prod-preco','prod-custo','prod-estoque','prod-imagem'].forEach(f=>el(f).value='');
+    el('prod-codigo').value = gerarCodigoProduto();
     el('prod-categoria').value='Camiseta Básica'; el('prod-tamanho').value='M';
     el('prod-minimo').value='5'; el('prod-estoque').value='0';
     prev.src=''; prev.style.display='none'; el('img-upload-hint').style.display='';
@@ -1899,6 +1935,7 @@ document.querySelectorAll('.overlay').forEach(ov=>{
 (async () => {
   await seedAdminPadrao();
   seedProdutosDemo();
+  seedAcessoriosV2();
   if (sessaoAtual) {
     const u = usuarios.find(x => x.id === sessaoAtual.id);
     if (u && u.ativo) { iniciarApp(); return; }
