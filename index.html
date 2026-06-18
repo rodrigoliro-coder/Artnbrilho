@@ -2705,8 +2705,9 @@ function salvarConfiguracaoLoja() {
     lojaUf:          v('cfg-loja-uf'),
   });
   salvarConfig();
+  atualizarPreviewRemetente();
   const ok = document.getElementById('mc-cfg-ok');
-  if (ok) { ok.textContent = 'Dados da loja salvos!'; ok.style.display = ''; setTimeout(()=>ok.style.display='none', 2500); }
+  if (ok) { ok.textContent = 'Dados da loja salvos!'; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'), 2500); }
 }
 
 let _etqVendaId = null;
