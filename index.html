@@ -2618,6 +2618,35 @@ async function buscarCep(cep, prefix) {
   } catch(e) {}
 }
 
+function previewLogoLoja(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 300;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      config.lojaLogo = dataUrl;
+      const prev = document.getElementById('cfg-logo-preview');
+      if (prev) prev.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removerLogoLoja() {
+  config.lojaLogo = '';
+  const prev = document.getElementById('cfg-logo-preview');
+  if (prev) prev.innerHTML = `<span style="font-size:.6rem;color:var(--muted);text-align:center;padding:2px">SEM LOGO</span>`;
+}
+
 function carregarConfiguracaoLoja() {
   const s = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
   s('cfg-loja-nome',        config.lojaNome        || 'Artnbrilho');
@@ -2629,6 +2658,14 @@ function carregarConfiguracaoLoja() {
   s('cfg-loja-bairro',      config.lojaBairro      || '');
   s('cfg-loja-cidade',      config.lojaCidade      || '');
   s('cfg-loja-uf',          config.lojaUf          || '');
+  const prev = document.getElementById('cfg-logo-preview');
+  if (prev) {
+    if (config.lojaLogo) {
+      prev.innerHTML = `<img src="${config.lojaLogo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    } else {
+      prev.innerHTML = `<span style="font-size:.6rem;color:var(--muted);text-align:center;padding:2px">SEM LOGO</span>`;
+    }
+  }
 }
 
 function salvarConfiguracaoLoja() {
@@ -2656,7 +2693,6 @@ function abrirModalEtiqueta(vendaId) {
   if (!v) return;
   const infoEl = document.getElementById('etq-venda-info');
   if (infoEl) infoEl.textContent = `Pedido #${v.num} — ${v.cliente} — ${brl(v.total)}`;
-  // Check if client has address
   const cli = clientes.find(c => c.id === v.clienteId);
   const temEndereco = cli && (cli.logradouro || cli.cep);
   const avisoEl = document.getElementById('etq-aviso-endereco');
@@ -2669,6 +2705,63 @@ function fecharModalEtiqueta() {
   _etqVendaId = null;
 }
 
+function gerarHTMLEtiquetaEnvio(dest, rem, info) {
+  const logoHtml = rem.logo
+    ? `<img src="${rem.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="logo">`
+    : `<div style="text-align:center;line-height:1.15;padding:2px"><div style="font-size:8.5px;font-weight:900;color:#b8893b;letter-spacing:1px">ART &amp;</div><div style="font-size:8px;font-weight:900;color:#b8893b;letter-spacing:1px">BRILHO</div></div>`;
+
+  const labelBlock = `
+  <div style="width:100%;height:140mm;border:1.5px solid #bbb;border-radius:10px;padding:5mm 6mm;overflow:hidden;page-break-inside:avoid;font-family:Arial,Helvetica,sans-serif">
+    <!-- Header -->
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:3mm;border-bottom:1px solid #ddd;margin-bottom:2mm">
+      <div style="width:22mm;height:22mm;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+        ${logoHtml}
+      </div>
+      <div style="text-align:right;font-size:9.5px;line-height:1.8;font-family:Arial">
+        <div><strong>PEDIDO:</strong>&nbsp;${info.pedido}</div>
+        <div><strong>PLP:</strong>&nbsp;${info.plp}</div>
+        <div><strong>DATA:</strong>&nbsp;${info.data}</div>
+      </div>
+    </div>
+    <div style="font-size:9px;color:#555;margin-bottom:2mm"><strong>NF:</strong>&nbsp;${info.nf}</div>
+    <!-- Destinatario -->
+    <div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm;margin-top:4mm;margin-bottom:2.5mm">
+      <span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">DESTINATÁRIO</span>
+      <div style="font-size:13px;font-weight:700;margin-top:1.5mm;color:#111">${dest.nome}</div>
+      <div style="font-size:9.5px;line-height:1.5;margin-top:.5mm;color:#333">${dest.endereco}${dest.complemento ? '<br>'+dest.complemento : ''}</div>
+      <div style="font-size:9.5px;margin-top:.5mm;color:#333">${dest.cep ? '<strong>CEP:</strong> '+dest.cep : ''}${dest.cidade ? (dest.cep?'&nbsp;&nbsp;':'')+dest.cidade : ''}</div>
+    </div>
+    <!-- Remetente -->
+    <div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm;margin-bottom:2.5mm">
+      <span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">REMETENTE</span>
+      <div style="font-size:13px;font-weight:700;margin-top:1.5mm;color:#111">${rem.nome}</div>
+      <div style="font-size:9.5px;line-height:1.5;margin-top:.5mm;color:#333">${rem.endereco}${rem.complemento ? '<br>'+rem.complemento : ''}</div>
+      <div style="font-size:9.5px;margin-top:.5mm;color:#333">${rem.cep ? '<strong>CEP:</strong> '+rem.cep : ''}${rem.cidade ? (rem.cep?'&nbsp;&nbsp;':'')+rem.cidade : ''}</div>
+    </div>
+    ${info.obs ? '<div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm"><span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">OBSERVAÇÃO</span><div style="font-size:9.5px;line-height:1.5;margin-top:1.5mm;color:#333">'+info.obs+'</div></div>' : ''}
+  </div>`;
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Etiqueta de Envio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:letter;margin:10mm 15mm}
+body{background:#fff}
+</style>
+</head>
+<body>
+<div style="width:100%">
+  ${labelBlock}
+  <div style="height:6mm"></div>
+  ${labelBlock}
+</div>
+</body>
+</html>`;
+}
+
 function imprimirEtiquetaEnvio() {
   const v = vendas.find(x => x.id === _etqVendaId);
   if (!v) return;
@@ -2679,142 +2772,121 @@ function imprimirEtiquetaEnvio() {
   const cli = clientes.find(c => c.id === v.clienteId);
   const dest = {
     nome:        v.cliente,
-    logradouro:  cli?.logradouro || '',
-    numero:      cli?.numero     || '',
-    complemento: cli?.complemento|| '',
-    bairro:      cli?.bairro     || '',
-    cidade:      cli?.cidade     || '',
-    uf:          cli?.uf         || '',
-    cep:         (cli?.cep||'').replace(/\D/g,''),
+    endereco:    cli ? [cli.logradouro, cli.numero].filter(Boolean).join(', ') : '',
+    complemento: cli?.complemento || '',
+    cep:         cli?.cep || '',
+    cidade:      cli ? [cli.cidade, cli.uf].filter(Boolean).join(' — ') : '',
   };
 
   const rem = {
-    nome:       config.lojaNome       || 'Artnbrilho',
-    logradouro: config.lojaLogradouro || '',
-    numero:     config.lojaNumero     || '',
-    complemento:config.lojaComplemento|| '',
-    bairro:     config.lojaBairro     || '',
-    cidade:     config.lojaCidade     || 'São Paulo',
-    uf:         config.lojaUf         || 'SP',
-    cep:        (config.lojaCep||'').replace(/\D/g,''),
+    nome:        config.lojaNome        || 'Artnbrilho',
+    endereco:    [config.lojaLogradouro, config.lojaNumero].filter(Boolean).join(', '),
+    complemento: config.lojaComplemento || '',
+    cep:         config.lojaCep         || '',
+    cidade:      [config.lojaCidade, config.lojaUf].filter(Boolean).join(' — '),
+    logo:        config.lojaLogo        || '',
   };
 
-  const codigoPedido = `ARN${String(v.num).padStart(6,'0')}${v.id.slice(-4).toUpperCase()}`;
-  const cepDest = dest.cep ? dest.cep.replace(/(\d{5})(\d{3})/,'$1-$2') : '';
-  const cepRem  = rem.cep  ? rem.cep.replace(/(\d{5})(\d{3})/,'$1-$2')  : '';
-
-  const remEnd = [rem.logradouro, rem.numero, rem.complemento].filter(Boolean).join(', ');
-  const remCid = [rem.bairro, rem.cidade, rem.uf ? rem.uf : ''].filter(Boolean).join(' — ');
-
-  const destEnd1 = [dest.logradouro, dest.numero, dest.complemento].filter(Boolean).join(', ');
-  const destEnd2 = [dest.bairro, dest.cidade, dest.uf].filter(Boolean).join(' — ');
-
-  const itensLista = v.itens.map(i => `${i.nome} x${i.qty}`).join(', ');
-
-  const html = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Etiqueta — ${codigoPedido}</title>
-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-@page{margin:0;size:10cm 17cm}
-body{font-family:Arial,sans-serif;font-size:11px;background:#fff;width:10cm;padding:4mm}
-.label{border:1.5px dashed #888}
-.sec{padding:3mm 4mm;border-bottom:1px solid #000}
-.sec:last-child{border-bottom:none}
-.badge{background:#000;color:#fff;font-size:6.5px;font-weight:700;padding:1.5px 5px;letter-spacing:.5px;display:inline-block;vertical-align:middle}
-.logo-text{font-size:22px;font-weight:900;letter-spacing:3px;color:#b8893b;font-family:'Arial Black',Arial,sans-serif}
-.logo-sub{font-size:7px;letter-spacing:2px;color:#666;text-transform:uppercase;margin-top:1px}
-.header{display:flex;align-items:flex-start;justify-content:space-between;gap:3mm}
-.pkg{text-align:center;border-left:1px solid #ccc;padding-left:3mm;min-width:30mm}
-.pkg-vol{font-size:22px;font-weight:900;line-height:1}
-.pkg-w{font-size:13px;font-weight:700;margin-top:1mm}
-.pkg-d{font-size:8px;color:#555;margin-top:1mm}
-.order-code{text-align:center;font-size:10px;font-weight:700;letter-spacing:2px;padding:2mm 0;color:#555}
-.cep-dest{display:flex;align-items:center;gap:3mm}
-.cep-box{background:#000;color:#fff;font-size:19px;font-weight:900;padding:1.5mm 3mm;letter-spacing:2px;white-space:nowrap}
-.cidade-dest{font-size:14px;font-weight:700}
-.barcode-wrap{text-align:center;padding:2mm 0}
-.barcode-wrap svg{max-width:100%}
-.barcode-num{font-size:8px;font-weight:700;letter-spacing:2px;margin-top:1mm}
-.dace{font-size:6px;line-height:1.4;color:#333}
-.dace-title{font-size:7.5px;font-weight:700;margin-bottom:1.5mm;text-align:center}
-.dace-fields{display:flex;gap:2mm;margin-bottom:1.5mm}
-.dace-field{flex:1;border:.5px solid #000;padding:1px 3px}
-.dace-field b{font-size:6.5px}
-</style>
-</head>
-<body>
-<div class="label">
-  <div class="sec header">
-    <div>
-      <div class="logo-text">ARTNBRILHO</div>
-      <div class="logo-sub">Moda &amp; Acessórios</div>
-    </div>
-    <div class="pkg">
-      <div class="pkg-vol">1/1</div>
-      <div class="pkg-w">${peso}g</div>
-      <div class="pkg-d">${dims}</div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <span class="badge">REMETENTE</span> <strong style="font-size:12px">&nbsp;${rem.nome}</strong><br>
-    <span style="font-size:10px">${remEnd}${rem.complemento?' — '+rem.complemento:''}<br>
-    ${remCid}${cepRem?' – '+cepRem:''}</span>
-  </div>
-
-  <div class="order-code">${codigoPedido}</div>
-
-  <div class="sec cep-dest">
-    ${cepDest ? `<span class="cep-box">${dest.uf} ${cepDest}</span>` : ''}
-    <span class="cidade-dest">${dest.cidade||'–'}${dest.uf&&!cepDest?' — '+dest.uf:''}</span>
-  </div>
-
-  <div class="sec">
-    <span class="badge">ENTREGAR PARA</span> <strong style="font-size:12px">&nbsp;${dest.nome}</strong><br>
-    <span style="font-size:10px">${destEnd1||'Endereço não informado'}<br>
-    ${destEnd2}</span>
-  </div>
-
-  <div class="sec">
-    <span class="badge">OBSERVAÇÕES</span>&nbsp;${obsEtq || dest.nome}
-    ${v.obs ? `<br><span style="font-size:9px;color:#555">${v.obs}</span>` : ''}
-  </div>
-
-  <div class="barcode-wrap">
-    <svg id="barcode"></svg>
-    <div class="barcode-num">${codigoPedido}</div>
-  </div>
-
-  <div class="sec dace">
-    <div class="dace-title">DACE — DECLARAÇÃO AUXILIAR DE CONTEÚDO ELETRÔNICA</div>
-    <div class="dace-fields">
-      <div class="dace-field"><b>Nº:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-      <div class="dace-field"><b>SÉRIE:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-      <div class="dace-field"><b>EMISSÃO:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
-    </div>
-    <p>É contribuinte de ICMS qualquer pessoa física ou jurídica, que realize, com habitualidade ou em volume que caracterize intuito comercial, operações de circulação de mercadoria ou prestações de serviços de transportes interestadual e intermunicipal e de comunicação, ainda que as operações e prestações se iniciem no exterior, conforme art. 4º da Lei Complementar nº 87/96.</p>
-    <p style="margin-top:1mm">Constitui crime contra a ordem tributária suprimir ou reduzir tributo, ou contribuição social e qualquer acessório: quando negar ou deixar de fornecer, quando obrigatório, nota fiscal ou documento equivalente, relativa a venda de mercadoria ou prestação de serviço, efetivamente realizada ou fornecê-la em desacordo com a legislação, sob pena de reclusão de dois a cinco anos, e multa, conforme inciso V do art. 1º da Lei nº 8.137/90.</p>
-    <p style="margin-top:2mm;font-size:7px"><b>Conteúdo:</b> ${itensLista} | <b>Valor declarado:</b> ${brl(v.total)}</p>
-  </div>
-</div>
-<script>
-  window.onload = function() {
-    JsBarcode('#barcode','${codigoPedido}',{format:'CODE128',width:1.5,height:45,displayValue:false,margin:2});
-    setTimeout(()=>window.print(),600);
+  const info = {
+    pedido: String(v.num).padStart(4,'0'),
+    plp:    '–',
+    nf:     String(v.num).padStart(4,'0'),
+    data:   new Date(v.data).toLocaleDateString('pt-BR'),
+    obs:    obsEtq || `${peso}g – ${dims}`,
   };
-<\/script>
-</body>
-</html>`;
 
-  const win = window.open('', '_blank', 'width=420,height=650');
+  const html = gerarHTMLEtiquetaEnvio(dest, rem, info);
+  const win = window.open('', '_blank', 'width=640,height=860');
   if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
   win.document.write(html);
   win.document.close();
   fecharModalEtiqueta();
+}
+
+// ─── Etiqueta avulsa (da página Etiquetas) ──────────────────────────────────────────────────
+function switchEtiqTab(tab) {
+  const isProduto = tab === 'produto';
+  document.getElementById('etiq-panel-produto').style.display = isProduto ? '' : 'none';
+  document.getElementById('etiq-panel-envio').style.display   = isProduto ? 'none' : '';
+  const btP = document.getElementById('etiqbt-produto');
+  const btE = document.getElementById('etiqbt-envio');
+  if (btP) { btP.style.color = isProduto ? 'var(--brand)' : 'var(--muted)'; btP.style.borderBottom = isProduto ? '3px solid var(--brand)' : '3px solid transparent'; }
+  if (btE) { btE.style.color = !isProduto ? 'var(--brand)' : 'var(--muted)'; btE.style.borderBottom = !isProduto ? '3px solid var(--brand)' : '3px solid transparent'; }
+  if (!isProduto) {
+    popularClientesDropdownEtq();
+    atualizarPreviewRemetente();
+    const dataEl = document.getElementById('etq-av-data');
+    if (dataEl && !dataEl.value) dataEl.value = new Date().toISOString().slice(0,10);
+  }
+}
+
+function popularClientesDropdownEtq() {
+  const sel = document.getElementById('etq-av-cliente');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Digitar manualmente…</option>' +
+    clientes.map(c => `<option value="${c.id}">${c.nome}${c.cidade ? ' — '+c.cidade : ''}</option>`).join('');
+}
+
+function preencherDestinatarioDoCliente() {
+  const id = document.getElementById('etq-av-cliente')?.value;
+  if (!id) return;
+  const c = clientes.find(x => x.id === id);
+  if (!c) return;
+  const s = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = val||''; };
+  s('etq-av-nome', c.nome);
+  s('etq-av-end',  [c.logradouro, c.numero].filter(Boolean).join(', '));
+  s('etq-av-comp', c.complemento||'');
+  s('etq-av-cep',  c.cep||'');
+  s('etq-av-cidade', [c.cidade, c.uf].filter(Boolean).join(' — '));
+}
+
+function atualizarPreviewRemetente() {
+  const el = document.getElementById('etq-av-rem-preview');
+  if (!el) return;
+  const nome = config.lojaNome || 'Artnbrilho';
+  const end  = [config.lojaLogradouro, config.lojaNumero, config.lojaComplemento].filter(Boolean).join(', ');
+  const cid  = [config.lojaCidade, config.lojaUf].filter(Boolean).join(' — ');
+  const cep  = config.lojaCep || '';
+  const logo = config.lojaLogo ? `<img src="${config.lojaLogo}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:6px;display:block">` : '';
+  el.innerHTML = `${logo}<strong>${nome}</strong><br>${end||'<em style="color:var(--muted)">Endereço não configurado</em>'}<br>${cid}${cep?'<br><strong>CEP:</strong> '+cep:''}`;
+}
+
+function imprimirEtiquetaAvulsa() {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  const nome = v('etq-av-nome');
+  if (!nome) { alert('Informe o nome do destinatário.'); return; }
+
+  const dest = {
+    nome,
+    endereco:    v('etq-av-end'),
+    complemento: v('etq-av-comp'),
+    cep:         v('etq-av-cep'),
+    cidade:      v('etq-av-cidade'),
+  };
+
+  const dataVal = v('etq-av-data');
+  const info = {
+    pedido: v('etq-av-pedido') || '–',
+    plp:    v('etq-av-plp')    || '–',
+    nf:     v('etq-av-nf')     || '–',
+    data:   dataVal ? new Date(dataVal+'T12:00').toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR'),
+    obs:    v('etq-av-obs'),
+  };
+
+  const rem = {
+    nome:        config.lojaNome        || 'Artnbrilho',
+    endereco:    [config.lojaLogradouro, config.lojaNumero].filter(Boolean).join(', '),
+    complemento: config.lojaComplemento || '',
+    cep:         config.lojaCep         || '',
+    cidade:      [config.lojaCidade, config.lojaUf].filter(Boolean).join(' — '),
+    logo:        config.lojaLogo        || '',
+  };
+
+  const html = gerarHTMLEtiquetaEnvio(dest, rem, info);
+  const win = window.open('', '_blank', 'width=640,height=860');
+  if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
+  win.document.write(html);
+  win.document.close();
 }
 
 // ═══════════════════════════════════════════════════
