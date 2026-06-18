@@ -811,19 +811,43 @@
               </select>
             </div>
             <div class="form-group"><label>Nome *</label><input type="text" id="etq-av-nome" placeholder="Nome completo do destinatário"></div>
-            <div class="form-group"><label>Endereço (rua, número)</label><input type="text" id="etq-av-end" placeholder="Rua das Flores, 100"></div>
-            <div class="form-group"><label>Complemento</label><input type="text" id="etq-av-comp" placeholder="Apto 81, Bloco C3..."></div>
+            <div class="form-group" style="max-width:200px">
+              <label>CEP <small style="font-weight:400;color:var(--muted)">(somente números)</small></label>
+              <input type="text" id="etq-av-cep" placeholder="00000000" maxlength="8"
+                oninput="this.value=this.value.replace(/\D/g,'').slice(0,8);if(this.value.length===8)buscarCepEtq(this.value)">
+            </div>
+            <div class="form-group">
+              <label>Endereço <small style="font-weight:400;color:var(--muted)">(preenchido automaticamente pelo CEP)</small></label>
+              <input type="text" id="etq-av-end" placeholder="Rua / Avenida…">
+            </div>
+            <div class="form-group" style="max-width:160px">
+              <label>Número <small style="font-weight:400;color:var(--muted)">(somente números)</small></label>
+              <input type="text" id="etq-av-numero" placeholder="100" oninput="this.value=this.value.replace(/\D/g,'')">
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+                <input type="checkbox" id="etq-comp-chk" onchange="toggleEtqOpcional('etq-av-comp','etq-comp-chk')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--brand)">
+                Complemento
+              </label>
+              <input type="text" id="etq-av-comp" placeholder="Apto 81, Bloco C3…" disabled
+                style="opacity:.4;cursor:not-allowed;margin-top:6px">
+            </div>
             <div class="form-row" style="gap:10px">
-              <div class="form-group" style="flex:0 0 130px">
-                <label>CEP</label>
-                <input type="text" id="etq-av-cep" placeholder="00000-000" maxlength="9"
-                  oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
-                  onblur="buscarCepEtq(this.value)">
+              <div class="form-group"><label>Cidade</label><input type="text" id="etq-av-cidade" placeholder="São Paulo"></div>
+              <div class="form-group" style="flex:0 0 80px">
+                <label>Estado</label>
+                <input type="text" id="etq-av-uf" placeholder="SP" maxlength="2"
+                  oninput="this.value=this.value.replace(/[^a-zA-Z]/g,'').toUpperCase()">
               </div>
-              <div class="form-group">
-                <label>Cidade — UF</label>
-                <input type="text" id="etq-av-cidade" placeholder="São Paulo — SP">
-              </div>
+            </div>
+            <div class="form-group">
+              <label style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none">
+                <input type="checkbox" id="etq-tel-chk" onchange="toggleEtqOpcional('etq-av-tel','etq-tel-chk')" style="width:15px;height:15px;cursor:pointer;accent-color:var(--brand)">
+                Telefone para contato
+              </label>
+              <input type="text" id="etq-av-tel" placeholder="(XX) XXXXX-XXXX" maxlength="15" disabled
+                style="opacity:.4;cursor:not-allowed;margin-top:6px"
+                oninput="let d=this.value.replace(/\D/g,'').slice(0,11);this.value=d.length>7?d.replace(/^(\d{2})(\d{5})(\d*)/,'($1) $2-$3'):d.length>2?d.replace(/^(\d{2})(\d*)/,'($1) $2'):'('+d">
             </div>
 
             <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin:16px 0 12px;border-top:1.5px solid var(--border);padding-top:14px">Informações do Pedido</div>
@@ -2633,12 +2657,23 @@ async function buscarCepEtq(cep) {
     const r = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
     const d = await r.json();
     if (d.erro) return;
-    const endEl    = document.getElementById('etq-av-end');
-    const cidadeEl = document.getElementById('etq-av-cidade');
-    if (endEl && d.logradouro && !endEl.value) endEl.value = d.logradouro;
-    if (cidadeEl && (d.localidade || d.uf))
-      cidadeEl.value = [d.localidade, d.uf].filter(Boolean).join(' — ');
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    set('etq-av-end',    d.logradouro);
+    set('etq-av-cidade', d.localidade);
+    set('etq-av-uf',     d.uf);
+    document.getElementById('etq-av-numero')?.focus();
   } catch(e) {}
+}
+
+function toggleEtqOpcional(fieldId, chkId) {
+  const chk = document.getElementById(chkId);
+  const el  = document.getElementById(fieldId);
+  if (!el || !chk) return;
+  el.disabled      = !chk.checked;
+  el.style.opacity = chk.checked ? '1' : '.4';
+  el.style.cursor  = chk.checked ? '' : 'not-allowed';
+  if (!chk.checked) el.value = '';
+  else el.focus();
 }
 
 function previewLogoLoja(input) {
@@ -2754,6 +2789,7 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info) {
       <div style="font-size:10.5px;font-weight:700;margin-top:1mm;color:#111">${dest.nome}</div>
       <div style="font-size:8px;line-height:1.5;margin-top:.5mm;color:#333">${dest.endereco}${dest.complemento ? '<br>'+dest.complemento : ''}</div>
       <div style="font-size:8px;margin-top:.5mm;color:#333">${dest.cep ? '<strong>CEP:</strong> '+dest.cep : ''}${dest.cidade ? (dest.cep?'&nbsp;&nbsp;':'')+dest.cidade : ''}</div>
+      ${dest.telefone ? '<div style="font-size:8px;margin-top:.5mm;color:#333"><strong>Tel:</strong> '+dest.telefone+'</div>' : ''}
     </div>
     <!-- Remetente -->
     <div style="border:1.5px solid #222;border-radius:5px;position:relative;padding:2.5mm 3mm 2mm;margin-bottom:2mm">
@@ -2907,11 +2943,32 @@ function preencherDestinatarioDoCliente() {
   const c = clientes.find(x => x.id === id);
   if (!c) return;
   const s = (elId, val) => { const el = document.getElementById(elId); if(el) el.value = val||''; };
-  s('etq-av-nome', c.nome);
-  s('etq-av-end',  [c.logradouro, c.numero].filter(Boolean).join(', '));
-  s('etq-av-comp', c.complemento||'');
-  s('etq-av-cep',  c.cep||'');
-  s('etq-av-cidade', [c.cidade, c.uf].filter(Boolean).join(' — '));
+  s('etq-av-nome',   c.nome);
+  s('etq-av-cep',    (c.cep||'').replace(/\D/g,''));
+  s('etq-av-end',    c.logradouro||'');
+  s('etq-av-numero', c.numero||'');
+  s('etq-av-cidade', c.cidade||'');
+  s('etq-av-uf',     c.uf||'');
+  // Complemento — habilita checkbox se tiver valor
+  const compChk = document.getElementById('etq-comp-chk');
+  const compEl  = document.getElementById('etq-av-comp');
+  if (compChk && compEl) {
+    compChk.checked      = !!c.complemento;
+    compEl.disabled      = !c.complemento;
+    compEl.style.opacity = c.complemento ? '1' : '.4';
+    compEl.style.cursor  = c.complemento ? '' : 'not-allowed';
+    compEl.value         = c.complemento || '';
+  }
+  // Telefone — habilita checkbox se tiver valor
+  const telChk = document.getElementById('etq-tel-chk');
+  const telEl  = document.getElementById('etq-av-tel');
+  if (telChk && telEl) {
+    telChk.checked      = !!c.telefone;
+    telEl.disabled      = !c.telefone;
+    telEl.style.opacity = c.telefone ? '1' : '.4';
+    telEl.style.cursor  = c.telefone ? '' : 'not-allowed';
+    telEl.value         = c.telefone || '';
+  }
 }
 
 function atualizarPreviewRemetente() {
@@ -2930,12 +2987,14 @@ function imprimirEtiquetaAvulsa() {
   const nome = v('etq-av-nome');
   if (!nome) { alert('Informe o nome do destinatário.'); return; }
 
+  const cepRaw = v('etq-av-cep').replace(/\D/g,'');
   const dest = {
     nome,
-    endereco:    v('etq-av-end'),
-    complemento: v('etq-av-comp'),
-    cep:         v('etq-av-cep'),
-    cidade:      v('etq-av-cidade'),
+    endereco:    [v('etq-av-end'), v('etq-av-numero')].filter(Boolean).join(', '),
+    complemento: document.getElementById('etq-comp-chk')?.checked ? v('etq-av-comp') : '',
+    cep:         cepRaw.length === 8 ? cepRaw.replace(/(\d{5})(\d{3})/, '$1-$2') : cepRaw,
+    cidade:      [v('etq-av-cidade'), v('etq-av-uf')].filter(Boolean).join(' — '),
+    telefone:    document.getElementById('etq-tel-chk')?.checked ? v('etq-av-tel') : '',
   };
 
   const dataVal = v('etq-av-data');
