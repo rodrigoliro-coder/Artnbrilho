@@ -2434,39 +2434,48 @@ function renderResultadosBusca() {
 
 function abrirCamera() {
   if (typeof Html5Qrcode === 'undefined') { alert('Biblioteca de câmera não carregou. Verifique a conexão com a internet.'); return; }
+
+  // garante que não há instância anterior presa
+  if (_scannerInstance) {
+    try { _scannerInstance.clear(); } catch(e) {}
+    _scannerInstance = null;
+  }
+
   document.getElementById('overlay-camera').classList.add('open');
-  document.getElementById('camera-status').textContent = 'Iniciando câmera…';
+  const statusEl = document.getElementById('camera-status');
+  statusEl.textContent = 'Iniciando câmera…';
 
   _scannerInstance = new Html5Qrcode('camera-reader');
-  Html5Qrcode.getCameras().then(cameras => {
-    if (!cameras || !cameras.length) { document.getElementById('camera-status').textContent = 'Nenhuma câmera encontrada.'; return; }
-    // prefere câmera traseira
-    const cam = cameras.find(c => /back|rear|environment/i.test(c.label)) || cameras[cameras.length - 1];
-    document.getElementById('camera-status').textContent = 'Câmera ativa — aponte para o código';
-    _scannerInstance.start(
-      cam.id,
-      { fps: 12, qrbox: { width: 260, height: 120 } },
-      (decodedText) => {
-        // tenta encontrar pelo código exato ou pelo conteúdo do QR
-        let prod = produtos.find(p => p.codigo === decodedText);
-        if (!prod) prod = produtos.find(p => decodedText.includes(p.codigo));
-        fecharCamera();
-        if (prod) { adicionarProdutoAoCarrinho(prod); }
-        else { alert('Produto com código "' + decodedText + '" não encontrado no sistema.'); }
-      },
-      () => {} // erros de frame ignorados
-    ).catch(err => {
-      document.getElementById('camera-status').textContent = 'Erro ao acessar câmera: ' + err;
-    });
-  }).catch(() => {
-    document.getElementById('camera-status').textContent = 'Sem permissão para acessar a câmera.';
+
+  // usa facingMode diretamente — dispara o diálogo de permissão do browser
+  // sem precisar chamar getCameras() antes (que falha sem permissão prévia)
+  _scannerInstance.start(
+    { facingMode: { ideal: 'environment' } },
+    { fps: 12, qrbox: { width: 260, height: 120 } },
+    (decodedText) => {
+      let prod = produtos.find(p => p.codigo === decodedText);
+      if (!prod) prod = produtos.find(p => decodedText.includes(p.codigo));
+      fecharCamera();
+      if (prod) { adicionarProdutoAoCarrinho(prod); }
+      else { alert('Produto com código "' + decodedText + '" não encontrado no sistema.'); }
+    },
+    () => {}
+  ).then(() => {
+    statusEl.textContent = 'Câmera ativa — aponte para o código';
+  }).catch(err => {
+    const msg = (err && err.message) ? err.message : String(err);
+    if (/permission|denied|not allowed/i.test(msg)) {
+      statusEl.textContent = 'Permissão de câmera negada. Habilite nas configurações do navegador.';
+    } else {
+      statusEl.textContent = 'Erro ao acessar câmera: ' + msg;
+    }
   });
 }
 
 function fecharCamera() {
   if (_scannerInstance) {
     _scannerInstance.stop().catch(() => {}).finally(() => {
-      _scannerInstance.clear();
+      try { _scannerInstance.clear(); } catch(e) {}
       _scannerInstance = null;
     });
   }
