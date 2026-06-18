@@ -1248,6 +1248,30 @@
           </div>
           <button class="btn btn-primary btn-sm" onclick="salvarConfiguracaoLoja()" style="margin-top:6px">Salvar dados da loja</button>
         </div>
+
+        <!-- BACKUP DE DADOS -->
+        <div class="table-wrap" style="padding:24px;margin-top:20px">
+          <h3 style="font-size:.95rem;margin-bottom:4px">Backup de Dados</h3>
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:18px">Exporte todos os dados para um arquivo .json e salve no iCloud Drive para acessar em outro Mac ou iPad.</p>
+
+          <button class="btn btn-primary" onclick="exportarDados()" style="width:100%;margin-bottom:12px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Exportar todos os dados
+          </button>
+
+          <div style="border-top:1.5px solid var(--border);padding-top:14px;margin-top:4px">
+            <p style="font-size:.78rem;color:var(--muted);margin-bottom:10px">
+              <strong style="color:var(--dark)">Importar backup</strong><br>
+              Selecione um arquivo .json exportado anteriormente. <span style="color:var(--red)">Atenção: substitui todos os dados atuais.</span>
+            </p>
+            <label class="btn btn-ghost" style="width:100%;justify-content:center;cursor:pointer;margin-bottom:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 5 17 10"/><line x1="12" y1="5" x2="12" y2="17"/></svg>
+              Selecionar arquivo de backup
+              <input type="file" accept=".json" onchange="importarDados(this)" style="display:none">
+            </label>
+            <div id="import-status" style="font-size:.78rem;text-align:center;color:var(--muted);min-height:18px"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2683,6 +2707,79 @@ function toggleEtqOpcional(fieldId, chkId) {
   el.style.cursor  = chk.checked ? '' : 'not-allowed';
   if (!chk.checked) el.value = '';
   else el.focus();
+}
+
+function exportarDados() {
+  const backup = {
+    versao: '1.0',
+    exportadoEm: new Date().toISOString(),
+    loja: config.lojaNome || 'Artnbrilho',
+    dados: {
+      produtos,
+      movimentos,
+      vendas,
+      usuarios,
+      eventos,
+      clientes,
+      carnes,
+      trocas,
+      metas,
+      eventosCalc,
+      config,
+    }
+  };
+  const json = JSON.stringify(backup, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const data = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `artnbrilho-backup-${data}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importarDados(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('import-status');
+  statusEl.textContent = 'Lendo arquivo…';
+  statusEl.style.color = 'var(--muted)';
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const backup = JSON.parse(e.target.result);
+      if (!backup.dados) throw new Error('Arquivo inválido ou corrompido.');
+
+      const confirmar = confirm(
+        `Importar backup de ${backup.exportadoEm ? new Date(backup.exportadoEm).toLocaleString('pt-BR') : 'data desconhecida'}?\n\nTodos os dados atuais serão substituídos.`
+      );
+      if (!confirmar) { statusEl.textContent = 'Importação cancelada.'; input.value = ''; return; }
+
+      const d = backup.dados;
+      if (d.produtos)     localStorage.setItem('ab_produtos',    JSON.stringify(d.produtos));
+      if (d.movimentos)   localStorage.setItem('ab_movimentos',  JSON.stringify(d.movimentos));
+      if (d.vendas)       localStorage.setItem('ab_vendas',      JSON.stringify(d.vendas));
+      if (d.usuarios)     localStorage.setItem('ab_usuarios',    JSON.stringify(d.usuarios));
+      if (d.eventos)      localStorage.setItem('ab_eventos',     JSON.stringify(d.eventos));
+      if (d.clientes)     localStorage.setItem('ab_clientes',    JSON.stringify(d.clientes));
+      if (d.carnes)       localStorage.setItem('ab_carnes',      JSON.stringify(d.carnes));
+      if (d.trocas)       localStorage.setItem('ab_trocas',      JSON.stringify(d.trocas));
+      if (d.metas)        localStorage.setItem('ab_metas',       JSON.stringify(d.metas));
+      if (d.eventosCalc)  localStorage.setItem('ab_eventos_calc',JSON.stringify(d.eventosCalc));
+      if (d.config)       localStorage.setItem('ab_config',      JSON.stringify(d.config));
+
+      statusEl.textContent = 'Backup importado com sucesso! Recarregando…';
+      statusEl.style.color = 'var(--green)';
+      setTimeout(() => location.reload(), 1200);
+    } catch(err) {
+      statusEl.textContent = 'Erro ao importar: ' + err.message;
+      statusEl.style.color = 'var(--red)';
+    }
+    input.value = '';
+  };
+  reader.readAsText(file);
 }
 
 function previewLogoLoja(input) {
