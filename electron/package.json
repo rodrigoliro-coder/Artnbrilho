@@ -1,0 +1,33 @@
+{
+  "name": "artnbrilho",
+  "version": "1.0.0",
+  "description": "Sistema de Gestão Artnbrilho",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac --arm64 --x64"
+  },
+  "build": {
+    "appId": "com.artnbrilho.app",
+    "productName": "Artnbrilho",
+    "mac": {
+      "category": "public.app-category.business",
+      "target": [
+        { "target": "dmg", "arch": ["arm64", "x64"] }
+      ]
+    },
+    "files": [
+      "main.js",
+      "../index.html"
+    ],
+    "extraFiles": [],
+    "dmg": {
+      "title": "Artnbrilho",
+      "window": { "width": 540, "height": 380 }
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  }
+}
