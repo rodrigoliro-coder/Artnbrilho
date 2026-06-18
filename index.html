@@ -823,23 +823,171 @@
 
     <!-- PRECIFICAÇÃO / CUSTO -->
     <div id="page-precificacao" class="page">
-      <div class="page-header"><h2>Precificação</h2><p>Analise o custo de cada peça e calcule o preço ideal com sua margem de lucro</p></div>
-      <div class="toolbar" style="align-items:center;gap:12px">
-        <input type="text" id="busca-precif" placeholder="Buscar produto…" oninput="renderPrecificacao()" style="min-width:200px">
-        <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:6px 14px">
-          <span style="font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap">Margem desejada</span>
-          <input type="number" id="margem-pct" value="50" min="0" max="9999" step="1"
-            style="width:64px;background:transparent;border:none;font-size:.95rem;font-weight:800;color:var(--brand);text-align:center;font-family:'Manrope',sans-serif"
-            oninput="renderPrecificacao()">
-          <span style="font-weight:800;color:var(--brand)">%</span>
+      <div class="page-header"><h2>Precificação</h2><p>Calcule preços de produtos e avalie a viabilidade de eventos</p></div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px">
+        <button id="precbt-produtos" onclick="switchPrecTab('produtos')"
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
+          Produtos
+        </button>
+        <button id="precbt-eventos" onclick="switchPrecTab('eventos')"
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
+          Eventos
+        </button>
+      </div>
+
+      <!-- ── PAINEL PRODUTOS ── -->
+      <div id="prec-panel-produtos">
+        <!-- Calculadora rápida -->
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px">
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">Calculadora Rápida de Preço</div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+            <div style="flex:1;min-width:150px">
+              <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:5px">Valor de Custo (R$)</label>
+              <input type="number" id="calc-custo" placeholder="0,00" min="0" step="0.01"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:700;color:var(--text)"
+                oninput="calcularCustoProduto()">
+            </div>
+            <div style="flex:1;min-width:150px">
+              <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:5px">Margem de Lucro (%)</label>
+              <input type="number" id="calc-margem" value="50" min="0" step="1"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:700;color:var(--brand)"
+                oninput="calcularCustoProduto()">
+            </div>
+            <div style="flex:1;min-width:180px;background:linear-gradient(135deg,var(--brand),var(--brand-dark));border-radius:9px;padding:10px 16px">
+              <div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:rgba(255,255,255,.75);margin-bottom:2px">Preço Sugerido</div>
+              <div id="calc-preco-sugerido" style="font-size:1.5rem;font-weight:800;color:#fff;line-height:1.1">R$ –</div>
+              <div id="calc-lucro-valor" style="font-size:.72rem;color:rgba(255,255,255,.82);margin-top:2px">Lucro: –</div>
+            </div>
+          </div>
+          <div id="calc-simulacao" style="display:none;margin-top:16px;overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;font-size:.82rem">
+              <thead><tr style="background:var(--surface2)">
+                <th style="padding:7px 12px;text-align:left;font-weight:700;color:var(--muted);font-size:.67rem;text-transform:uppercase;letter-spacing:.08em">Margem</th>
+                <th style="padding:7px 12px;text-align:right;font-weight:700;color:var(--muted);font-size:.67rem;text-transform:uppercase;letter-spacing:.08em">Preço de Venda</th>
+                <th style="padding:7px 12px;text-align:right;font-weight:700;color:var(--muted);font-size:.67rem;text-transform:uppercase;letter-spacing:.08em">Lucro (R$)</th>
+              </tr></thead>
+              <tbody id="calc-simulacao-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tabela de produtos cadastrados -->
+        <div class="toolbar" style="align-items:center;gap:12px">
+          <input type="text" id="busca-precif" placeholder="Buscar produto…" oninput="renderPrecificacao()" style="min-width:200px">
+          <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:6px 14px">
+            <span style="font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap">Margem desejada</span>
+            <input type="number" id="margem-pct" value="50" min="0" max="9999" step="1"
+              style="width:64px;background:transparent;border:none;font-size:.95rem;font-weight:800;color:var(--brand);text-align:center;font-family:'Manrope',sans-serif"
+              oninput="renderPrecificacao()">
+            <span style="font-weight:800;color:var(--brand)">%</span>
+          </div>
+        </div>
+        <div class="cards" id="prec-cards" style="margin-bottom:20px"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Produto</th><th>Custo</th><th>Preço Atual</th><th>Margem Atual</th><th id="th-prec-meta">Preço com 50% lucro</th><th>Situação</th></tr></thead>
+            <tbody id="tabela-precificacao"></tbody>
+          </table>
         </div>
       </div>
-      <div class="cards" id="prec-cards" style="margin-bottom:20px"></div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Produto</th><th>Custo</th><th>Preço Atual</th><th>Margem Atual</th><th id="th-prec-meta">Preço com 50% lucro</th><th>Situação</th></tr></thead>
-          <tbody id="tabela-precificacao"></tbody>
-        </table>
+
+      <!-- ── PAINEL EVENTOS ── -->
+      <div id="prec-panel-eventos" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px">
+
+          <!-- Formulário -->
+          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:16px">Dados do Evento</div>
+            <div style="display:grid;gap:11px">
+              <div>
+                <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Nome do Evento</label>
+                <input type="text" id="ev-nome" placeholder="Ex: Feira de Artesanato SP"
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 100px;gap:10px">
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Localização</label>
+                  <input type="text" id="ev-local" placeholder="Cidade/Estado"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+                </div>
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Nº de Dias</label>
+                  <input type="number" id="ev-dias" value="1" min="1"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700"
+                    oninput="toggleEvHospedagem()">
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border-radius:9px;padding:10px 14px;border:1.5px solid var(--border);cursor:pointer" onclick="document.getElementById('ev-fora-sp').click()">
+                <input type="checkbox" id="ev-fora-sp" onchange="toggleEvHospedagem()" style="width:16px;height:16px;accent-color:var(--brand);cursor:pointer">
+                <label for="ev-fora-sp" style="font-size:.82rem;font-weight:600;cursor:pointer;user-select:none">Fora de São Paulo (requer hospedagem)</label>
+              </div>
+              <div id="ev-hospedagem-wrap" style="display:none">
+                <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Hospedagem por Noite (R$)</label>
+                <input type="number" id="ev-hospedagem" placeholder="0,00" min="0" step="0.01"
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Pedágio Ida+Volta (R$)</label>
+                  <input type="number" id="ev-pedagio" placeholder="0,00" min="0" step="0.01"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                </div>
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Combustível (R$)</label>
+                  <input type="number" id="ev-combustivel" placeholder="0,00" min="0" step="0.01"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Alimentação/Dia (R$)</label>
+                  <input type="number" id="ev-alimentacao" placeholder="0,00" min="0" step="0.01"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                </div>
+                <div>
+                  <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Taxa de Inscrição (R$)</label>
+                  <input type="number" id="ev-taxa" placeholder="0,00" min="0" step="0.01"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                </div>
+              </div>
+              <div>
+                <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Outros Gastos (R$)</label>
+                <input type="number" id="ev-outros" placeholder="0,00" min="0" step="0.01"
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+              </div>
+              <div>
+                <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--brand);margin-bottom:4px">Faturamento Esperado (R$)</label>
+                <input type="number" id="ev-receita" placeholder="0,00" min="0" step="0.01"
+                  style="width:100%;background:var(--surface2);border:2px solid var(--brand);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:800;color:var(--brand)">
+              </div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <button class="btn btn-primary" onclick="calcularViabilidadeEvento()" style="flex:1">Calcular Viabilidade</button>
+              <button class="btn" onclick="limparFormEvento()">Limpar</button>
+            </div>
+          </div>
+
+          <!-- Resultado -->
+          <div id="ev-resultado" style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px;display:flex;align-items:center;justify-content:center;min-height:300px">
+            <p style="color:var(--muted);font-size:.85rem;text-align:center;line-height:1.7">Preencha os dados ao lado e clique em<br><strong style="color:var(--text)">Calcular Viabilidade</strong><br>para ver o resultado.</p>
+          </div>
+        </div>
+
+        <!-- Histórico -->
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em;color:var(--dark);margin-bottom:12px">Histórico de Cálculos Salvos</div>
+          <div id="ev-historico-empty" style="color:var(--muted);font-size:.83rem;padding:24px;background:var(--surface);border-radius:var(--radius);border:1.5px solid var(--border);text-align:center">
+            Nenhum cálculo salvo ainda. Use o formulário acima para começar.
+          </div>
+          <div class="table-wrap" id="ev-historico-wrap" style="display:none">
+            <table>
+              <thead><tr><th>Evento</th><th>Local</th><th>Dias</th><th>Total Custos</th><th>Faturamento</th><th>Lucro</th><th>Veredicto</th><th>Data</th><th></th></tr></thead>
+              <tbody id="ev-historico-body"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1208,8 +1356,9 @@ let eventos    = JSON.parse(localStorage.getItem('ab_eventos')    || '[]');
 let clientes   = JSON.parse(localStorage.getItem('ab_clientes')   || '[]');
 let carnes     = JSON.parse(localStorage.getItem('ab_carnes')     || '[]');
 let trocas     = JSON.parse(localStorage.getItem('ab_trocas')     || '[]');
-let metas      = JSON.parse(localStorage.getItem('ab_metas')      || '{}');
-let sessaoAtual = JSON.parse(sessionStorage.getItem('ab_sessao')  || 'null');
+let metas        = JSON.parse(localStorage.getItem('ab_metas')        || '{}');
+let eventosCalc  = JSON.parse(localStorage.getItem('ab_eventos_calc') || '[]');
+let sessaoAtual  = JSON.parse(sessionStorage.getItem('ab_sessao')     || 'null');
 let carrinhoVenda = [];
 let editandoProdutoId = null;
 let calAno = new Date().getFullYear();
@@ -1228,7 +1377,8 @@ const salvarEventos    = () => localStorage.setItem('ab_eventos',    JSON.string
 const salvarClientes   = () => localStorage.setItem('ab_clientes',   JSON.stringify(clientes));
 const salvarCarnes     = () => localStorage.setItem('ab_carnes',     JSON.stringify(carnes));
 const salvarTrocas     = () => localStorage.setItem('ab_trocas',     JSON.stringify(trocas));
-const salvarMetas      = () => localStorage.setItem('ab_metas',      JSON.stringify(metas));
+const salvarMetas       = () => localStorage.setItem('ab_metas',        JSON.stringify(metas));
+const salvarEventosCalc = () => localStorage.setItem('ab_eventos_calc', JSON.stringify(eventosCalc));
 const salvarSessao     = () => sessaoAtual
   ? sessionStorage.setItem('ab_sessao', JSON.stringify(sessaoAtual))
   : sessionStorage.removeItem('ab_sessao');
@@ -1269,14 +1419,25 @@ const PERFIL_LABEL = { admin: 'Administrador', operador: 'Operador', vendedor: '
 //  INICIALIZAÇÃO DE USUÁRIOS + PRODUTOS DEMO
 // ═══════════════════════════════════════════════════
 async function seedAdminPadrao() {
-  if (usuarios.length > 0) return;
-  const hash = await hashSenha('admin123');
-  usuarios.push({
-    id: genId(), nome: 'Administrador', usuario: 'admin',
-    senhaHash: hash, perfil: 'admin', ativo: true,
-    pergunta: 'Qual o nome da sua mãe?', respostaHash: await hashSenha('admin'),
-    criadoEm: agora(), ultimoLogin: null,
-  });
+  const adminAtivo = usuarios.find(u => u.perfil === 'admin' && u.ativo);
+  if (adminAtivo) return;
+  // No active admin found — ensure access is restored
+  const hash  = await hashSenha('admin123');
+  const hashR = await hashSenha('admin');
+  const existente = usuarios.find(u => u.usuario === 'admin');
+  if (existente) {
+    existente.senhaHash   = hash;
+    existente.respostaHash= hashR;
+    existente.ativo       = true;
+    existente.perfil      = 'admin';
+  } else {
+    usuarios.push({
+      id: genId(), nome: 'Administrador', usuario: 'admin',
+      senhaHash: hash, perfil: 'admin', ativo: true,
+      pergunta: 'Qual o nome da sua mãe?', respostaHash: hashR,
+      criadoEm: agora(), ultimoLogin: null,
+    });
+  }
   salvarUsuarios();
 }
 
@@ -2611,6 +2772,205 @@ function renderPrecificacao() {
       <td><span class="badge ${situacaoClass}">${situacaoLabel}</span></td>
     </tr>`;
   }).join('');
+}
+
+// ─── Precificação: alternância de abas ───────────────────────────────────────
+function switchPrecTab(tab) {
+  const isProdutos = tab === 'produtos';
+  document.getElementById('prec-panel-produtos').style.display = isProdutos ? '' : 'none';
+  document.getElementById('prec-panel-eventos').style.display  = isProdutos ? 'none' : '';
+  const btProd = document.getElementById('precbt-produtos');
+  const btEv   = document.getElementById('precbt-eventos');
+  if (btProd) {
+    btProd.style.color       = isProdutos ? 'var(--brand)' : 'var(--muted)';
+    btProd.style.borderBottom= isProdutos ? '3px solid var(--brand)' : '3px solid transparent';
+  }
+  if (btEv) {
+    btEv.style.color       = !isProdutos ? 'var(--brand)' : 'var(--muted)';
+    btEv.style.borderBottom= !isProdutos ? '3px solid var(--brand)' : '3px solid transparent';
+  }
+  if (isProdutos) renderPrecificacao();
+  else            renderEventosCalcHistorico();
+}
+
+// ─── Calculadora rápida de custo de produto ──────────────────────────────────
+function calcularCustoProduto() {
+  const custo  = parseFloat(document.getElementById('calc-custo')?.value)  || 0;
+  const margem = parseFloat(document.getElementById('calc-margem')?.value) || 0;
+  const elPreco = document.getElementById('calc-preco-sugerido');
+  const elLucro = document.getElementById('calc-lucro-valor');
+  const elSim   = document.getElementById('calc-simulacao');
+  const elBody  = document.getElementById('calc-simulacao-body');
+
+  if (custo <= 0) {
+    if (elPreco) elPreco.textContent = 'R$ –';
+    if (elLucro) elLucro.textContent = 'Lucro: –';
+    if (elSim)   elSim.style.display = 'none';
+    return;
+  }
+
+  const preco = custo * (1 + margem / 100);
+  const lucro = preco - custo;
+  if (elPreco) elPreco.textContent = brl(preco);
+  if (elLucro) elLucro.textContent = `Lucro: ${brl(lucro)} (${margem.toFixed(1)}%)`;
+
+  const margens = [10, 20, 30, 50, 75, 100, 150];
+  if (elBody) {
+    elBody.innerHTML = margens.map(m => {
+      const p = custo * (1 + m / 100);
+      const l = p - custo;
+      const destaque = Math.abs(m - margem) < 0.1;
+      return `<tr style="${destaque ? 'background:var(--surface2);font-weight:800' : ''}">
+        <td style="padding:6px 12px;${destaque ? 'color:var(--brand)' : 'color:var(--muted)'}">${m}%${destaque ? ' ★' : ''}</td>
+        <td style="padding:6px 12px;text-align:right;font-weight:700">${brl(p)}</td>
+        <td style="padding:6px 12px;text-align:right;color:var(--green)">${brl(l)}</td>
+      </tr>`;
+    }).join('');
+  }
+  if (elSim) elSim.style.display = '';
+}
+
+// ─── Viabilidade de evento ───────────────────────────────────────────────────
+function toggleEvHospedagem() {
+  const fora = document.getElementById('ev-fora-sp')?.checked;
+  const wrap = document.getElementById('ev-hospedagem-wrap');
+  if (wrap) wrap.style.display = fora ? '' : 'none';
+}
+
+function limparFormEvento() {
+  ['ev-nome','ev-local','ev-hospedagem','ev-pedagio','ev-combustivel',
+   'ev-alimentacao','ev-taxa','ev-outros','ev-receita'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const dias = document.getElementById('ev-dias');
+  if (dias) dias.value = 1;
+  const fora = document.getElementById('ev-fora-sp');
+  if (fora) fora.checked = false;
+  toggleEvHospedagem();
+  const res = document.getElementById('ev-resultado');
+  if (res) res.innerHTML = `<p style="color:var(--muted);font-size:.85rem;text-align:center;line-height:1.7">Preencha os dados ao lado e clique em<br><strong style="color:var(--text)">Calcular Viabilidade</strong><br>para ver o resultado.</p>`;
+}
+
+function calcularViabilidadeEvento() {
+  const nome        = (document.getElementById('ev-nome')?.value || '').trim();
+  const local       = (document.getElementById('ev-local')?.value || '').trim();
+  const dias        = parseInt(document.getElementById('ev-dias')?.value) || 1;
+  const forasp      = document.getElementById('ev-fora-sp')?.checked || false;
+  const hospDia     = parseFloat(document.getElementById('ev-hospedagem')?.value)  || 0;
+  const pedagio     = parseFloat(document.getElementById('ev-pedagio')?.value)     || 0;
+  const combustivel = parseFloat(document.getElementById('ev-combustivel')?.value) || 0;
+  const alimentacao = parseFloat(document.getElementById('ev-alimentacao')?.value) || 0;
+  const taxa        = parseFloat(document.getElementById('ev-taxa')?.value)        || 0;
+  const outros      = parseFloat(document.getElementById('ev-outros')?.value)      || 0;
+  const receita     = parseFloat(document.getElementById('ev-receita')?.value)     || 0;
+
+  if (!nome) { alert('Informe o nome do evento.'); return; }
+
+  const hospTotal    = forasp ? hospDia * dias : 0;
+  const alimentTotal = alimentacao * dias;
+  const totalCustos  = hospTotal + pedagio + combustivel + alimentTotal + taxa + outros;
+  const lucro        = receita - totalCustos;
+  const margemLucro  = receita > 0 ? (lucro / receita * 100) : 0;
+  const breakevenMin = totalCustos;
+
+  let veredicto, corVeredicto, bgVeredicto;
+  if (lucro >= totalCustos * 0.3) {
+    veredicto = 'Vale a pena!'; corVeredicto = 'var(--green)'; bgVeredicto = '#eaf5ee';
+  } else if (lucro > 0) {
+    veredicto = 'Atenção: margem baixa'; corVeredicto = 'var(--yellow)'; bgVeredicto = '#fff8e6';
+  } else if (lucro === 0) {
+    veredicto = 'Ponto de equilíbrio'; corVeredicto = 'var(--muted)'; bgVeredicto = 'var(--surface2)';
+  } else {
+    veredicto = 'Não vale — prejuízo!'; corVeredicto = 'var(--red)'; bgVeredicto = '#fef0ee';
+  }
+
+  const linhas = [
+    forasp ? ['Hospedagem', `${dias} noite${dias>1?'s':''}`, brl(hospTotal)] : null,
+    pedagio     ? ['Pedágio (ida+volta)', '–', brl(pedagio)]    : null,
+    combustivel ? ['Combustível', '–', brl(combustivel)]        : null,
+    alimentacao ? ['Alimentação', `${dias} dia${dias>1?'s':''}`, brl(alimentTotal)] : null,
+    taxa        ? ['Taxa de inscrição', '–', brl(taxa)]         : null,
+    outros      ? ['Outros gastos', '–', brl(outros)]           : null,
+  ].filter(Boolean);
+
+  const res = document.getElementById('ev-resultado');
+  if (res) res.innerHTML = `
+    <div style="width:100%">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">${nome}${local ? ` — ${local}` : ''}</div>
+      <table style="width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:14px">
+        <tbody>
+          ${linhas.map(([desc,det,val])=>`<tr><td style="padding:5px 0;color:var(--muted)">${desc}${det&&det!=='–'?` <small>(${det})</small>`:''}</td><td style="padding:5px 0;text-align:right;font-weight:700">${val}</td></tr>`).join('')}
+          <tr style="border-top:1.5px solid var(--border)">
+            <td style="padding:7px 0;font-weight:700">Total de Custos</td>
+            <td style="padding:7px 0;text-align:right;font-weight:800;color:var(--red)">${brl(totalCustos)}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;color:var(--muted)">Faturamento esperado</td>
+            <td style="padding:5px 0;text-align:right;font-weight:700;color:var(--brand)">${brl(receita)}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;font-weight:700">Lucro estimado</td>
+            <td style="padding:5px 0;text-align:right;font-weight:800;color:${lucro>=0?'var(--green)':'var(--red)'}">${brl(lucro)}</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;color:var(--muted)">Margem de lucro</td>
+            <td style="padding:5px 0;text-align:right;font-weight:700;color:${lucro>=0?'var(--green)':'var(--red)'}">${margemLucro.toFixed(1)}%</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;color:var(--muted)">Faturamento mínimo (break-even)</td>
+            <td style="padding:5px 0;text-align:right;font-weight:700">${brl(breakevenMin)}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="background:${bgVeredicto};border:1.5px solid ${corVeredicto};border-radius:10px;padding:12px 16px;text-align:center">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.06em;color:${corVeredicto}">${veredicto}</div>
+        ${lucro < 0 ? `<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Precisa faturar mais ${brl(-lucro)} para cobrir os custos.</div>` : ''}
+      </div>
+      <button class="btn btn-primary" onclick="salvarCalculoEvento()" style="width:100%;margin-top:12px">Salvar este cálculo</button>
+    </div>`;
+
+  window._ultimoCalculoEvento = { nome, local, dias, forasp, hospDia, pedagio, combustivel, alimentacao, taxa, outros, receita, totalCustos, lucro, margemLucro, veredicto };
+}
+
+function salvarCalculoEvento() {
+  const c = window._ultimoCalculoEvento;
+  if (!c) return;
+  eventosCalc.unshift({ ...c, id: genId(), data: agora() });
+  salvarEventosCalc();
+  renderEventosCalcHistorico();
+  showAuthMsg && void 0;
+  alert('Cálculo salvo com sucesso!');
+}
+
+function excluirEventoCalc(id) {
+  if (!confirm('Excluir este cálculo?')) return;
+  eventosCalc = eventosCalc.filter(e => e.id !== id);
+  salvarEventosCalc();
+  renderEventosCalcHistorico();
+}
+
+function renderEventosCalcHistorico() {
+  const empty = document.getElementById('ev-historico-empty');
+  const wrap  = document.getElementById('ev-historico-wrap');
+  const tbody = document.getElementById('ev-historico-body');
+  if (!empty || !wrap || !tbody) return;
+  if (!eventosCalc.length) {
+    empty.style.display = ''; wrap.style.display = 'none'; return;
+  }
+  empty.style.display = 'none'; wrap.style.display = '';
+  const corVeredicto = v => v.startsWith('Vale') ? 'var(--green)' : v.startsWith('Não') ? 'var(--red)' : 'var(--yellow)';
+  tbody.innerHTML = eventosCalc.map(e => `<tr>
+    <td><strong>${e.nome}</strong></td>
+    <td style="color:var(--muted)">${e.local||'–'}</td>
+    <td style="text-align:center">${e.dias}</td>
+    <td style="font-weight:700;color:var(--red)">${brl(e.totalCustos)}</td>
+    <td style="font-weight:700;color:var(--brand)">${brl(e.receita)}</td>
+    <td style="font-weight:700;color:${e.lucro>=0?'var(--green)':'var(--red)'}">${brl(e.lucro)}</td>
+    <td><span style="font-size:.75rem;font-weight:700;color:${corVeredicto(e.veredicto)}">${e.veredicto}</span></td>
+    <td style="color:var(--muted);font-size:.78rem">${fmtDt(e.data)}</td>
+    <td><button class="btn" style="padding:4px 10px;font-size:.72rem" onclick="excluirEventoCalc('${e.id}')">Excluir</button></td>
+  </tr>`).join('');
 }
 
 function renderClientes() {
