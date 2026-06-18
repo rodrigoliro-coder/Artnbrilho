@@ -848,7 +848,14 @@
             </div>
             <div class="form-group">
               <label>Observação na etiqueta</label>
-              <input type="text" id="etq-av-obs" placeholder="Ex: Um motoboy virá retirar na portaria.">
+              <input type="text" id="etq-av-obs" placeholder="Clique em uma mensagem abaixo ou escreva…">
+              <div id="obs-presets-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px"></div>
+              <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
+                <input type="text" id="obs-preset-novo" placeholder="Nova mensagem predefinida…"
+                  style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Manrope',sans-serif;font-size:.8rem"
+                  onkeydown="if(event.key==='Enter'){adicionarObsPreset();event.preventDefault()}">
+                <button class="btn btn-ghost btn-sm" onclick="adicionarObsPreset()" style="white-space:nowrap">+ Adicionar</button>
+              </div>
             </div>
 
             <button class="btn btn-primary" onclick="imprimirEtiquetaAvulsa()" style="width:100%;margin-top:8px">
@@ -2815,9 +2822,61 @@ function switchEtiqTab(tab) {
   if (!isProduto) {
     popularClientesDropdownEtq();
     atualizarPreviewRemetente();
+    renderObsPresets();
     const dataEl = document.getElementById('etq-av-data');
     if (dataEl && !dataEl.value) dataEl.value = new Date().toISOString().slice(0,10);
   }
+}
+
+const OBS_PRESETS_PADRAO = [
+  'Um motoboy irá retirar este pacote na portaria.',
+  'Favor não dobrar. Contém itens delicados.',
+  'Aguardar coleta pelo transportador.',
+  'Não empilhar. Contém acessórios frágeis.',
+];
+
+function getObsPresets() {
+  if (!config.obsPresets) config.obsPresets = [...OBS_PRESETS_PADRAO];
+  return config.obsPresets;
+}
+
+function renderObsPresets() {
+  const wrap = document.getElementById('obs-presets-chips');
+  if (!wrap) return;
+  const presets = getObsPresets();
+  wrap.innerHTML = presets.map((txt, i) => `
+    <div style="display:flex;align-items:center;gap:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;overflow:hidden;max-width:100%">
+      <button onclick="aplicarObsPreset(${i})"
+        style="background:none;border:none;padding:5px 10px;font-family:'Manrope',sans-serif;font-size:.73rem;color:var(--text);cursor:pointer;text-align:left;line-height:1.3;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+        title="${txt.replace(/"/g,'&quot;')}">${txt}</button>
+      <button onclick="removerObsPreset(${i})"
+        style="background:none;border:none;border-left:1px solid var(--border);padding:5px 8px;cursor:pointer;color:var(--muted);font-size:.75rem;line-height:1;flex-shrink:0"
+        title="Remover">×</button>
+    </div>`).join('');
+}
+
+function aplicarObsPreset(idx) {
+  const el = document.getElementById('etq-av-obs');
+  if (el) el.value = getObsPresets()[idx] || '';
+}
+
+function adicionarObsPreset() {
+  const input = document.getElementById('obs-preset-novo');
+  const txt = (input?.value || '').trim();
+  if (!txt) return;
+  getObsPresets().push(txt);
+  config.obsPresets = getObsPresets();
+  salvarConfig();
+  input.value = '';
+  renderObsPresets();
+}
+
+function removerObsPreset(idx) {
+  const presets = getObsPresets();
+  presets.splice(idx, 1);
+  config.obsPresets = presets;
+  salvarConfig();
+  renderObsPresets();
 }
 
 function popularClientesDropdownEtq() {
