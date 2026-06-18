@@ -817,7 +817,8 @@
               <div class="form-group" style="flex:0 0 130px">
                 <label>CEP</label>
                 <input type="text" id="etq-av-cep" placeholder="00000-000" maxlength="9"
-                  oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)">
+                  oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
+                  onblur="buscarCepEtq(this.value)">
               </div>
               <div class="form-group">
                 <label>Cidade — UF</label>
@@ -2622,6 +2623,21 @@ async function buscarCep(cep, prefix) {
       const el = document.getElementById(id);
       if (el && val) el.value = val;
     });
+  } catch(e) {}
+}
+
+async function buscarCepEtq(cep) {
+  const raw = (cep || '').replace(/\D/g, '');
+  if (raw.length !== 8) return;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+    const d = await r.json();
+    if (d.erro) return;
+    const endEl    = document.getElementById('etq-av-end');
+    const cidadeEl = document.getElementById('etq-av-cidade');
+    if (endEl && d.logradouro && !endEl.value) endEl.value = d.logradouro;
+    if (cidadeEl && (d.localidade || d.uf))
+      cidadeEl.value = [d.localidade, d.uf].filter(Boolean).join(' — ');
   } catch(e) {}
 }
 
