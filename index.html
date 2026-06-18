@@ -738,7 +738,22 @@
 
     <!-- ETIQUETAS -->
     <div id="page-etiquetas" class="page">
-      <div class="page-header"><h2>Etiquetas</h2><p>Impressão de etiquetas 50×30mm com código de barras ou QR code</p></div>
+      <div class="page-header"><h2>Etiquetas</h2><p>Etiquetas de produto (50×30mm) e etiquetas de envio (PIMACO 6288)</p></div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px">
+        <button id="etiqbt-produto" onclick="switchEtiqTab('produto')"
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
+          Etiquetas de Produto
+        </button>
+        <button id="etiqbt-envio" onclick="switchEtiqTab('envio')"
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
+          Etiqueta de Envio
+        </button>
+      </div>
+
+      <!-- Panel: Produto -->
+      <div id="etiq-panel-produto">
       <div style="display:grid;grid-template-columns:1fr 240px;gap:28px;align-items:start">
         <div>
           <div class="form-group">
@@ -778,6 +793,90 @@
           </div>
         </div>
       </div>
+      </div><!-- end etiq-panel-produto -->
+
+      <!-- Panel: Envio (PIMACO 6288) -->
+      <div id="etiq-panel-envio" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+
+          <!-- Formulário -->
+          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">Destinatário</div>
+
+            <div class="form-group">
+              <label>Selecionar cliente cadastrado</label>
+              <select id="etq-av-cliente" onchange="preencherDestinatarioDoCliente()"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+                <option value="">Digitar manualmente…</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Nome *</label><input type="text" id="etq-av-nome" placeholder="Nome completo do destinatário"></div>
+            <div class="form-group"><label>Endereço (rua, número)</label><input type="text" id="etq-av-end" placeholder="Rua das Flores, 100"></div>
+            <div class="form-group"><label>Complemento</label><input type="text" id="etq-av-comp" placeholder="Apto 81, Bloco C3..."></div>
+            <div class="form-row" style="gap:10px">
+              <div class="form-group" style="flex:0 0 130px">
+                <label>CEP</label>
+                <input type="text" id="etq-av-cep" placeholder="00000-000" maxlength="9"
+                  oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)">
+              </div>
+              <div class="form-group">
+                <label>Cidade — UF</label>
+                <input type="text" id="etq-av-cidade" placeholder="São Paulo — SP">
+              </div>
+            </div>
+
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin:16px 0 12px;border-top:1.5px solid var(--border);padding-top:14px">Informações do Pedido</div>
+            <div class="form-row" style="gap:10px">
+              <div class="form-group">
+                <label>Pedido Nº</label>
+                <input type="text" id="etq-av-pedido" placeholder="0001">
+              </div>
+              <div class="form-group">
+                <label>PLP</label>
+                <input type="text" id="etq-av-plp" placeholder="0000100000">
+              </div>
+            </div>
+            <div class="form-row" style="gap:10px">
+              <div class="form-group">
+                <label>NF</label>
+                <input type="text" id="etq-av-nf" placeholder="0001">
+              </div>
+              <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="etq-av-data">
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Observação na etiqueta</label>
+              <input type="text" id="etq-av-obs" placeholder="Ex: Um motoboy virá retirar na portaria.">
+            </div>
+
+            <button class="btn btn-primary" onclick="imprimirEtiquetaAvulsa()" style="width:100%;margin-top:8px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              Gerar Etiqueta PIMACO 6288
+            </button>
+          </div>
+
+          <!-- Info / Remetente preview -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin-bottom:10px">Remetente (fixo)</div>
+              <div id="etq-av-rem-preview" style="font-size:.85rem;line-height:1.6;color:var(--muted)">Configure em Minha Conta → Dados da Loja</div>
+              <a href="#" onclick="navigate('minha-conta')" style="font-size:.75rem;color:var(--brand);font-weight:700;display:inline-block;margin-top:8px">Editar dados da loja →</a>
+            </div>
+            <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin-bottom:10px">Formato PIMACO 6288</div>
+              <ul style="font-size:.8rem;color:var(--muted);padding-left:16px;line-height:2">
+                <li>2 etiquetas por folha (tamanho carta)</li>
+                <li>101,6mm × 152,4mm cada etiqueta</li>
+                <li>Logo da loja, destinatário, remetente, observação</li>
+                <li>Configure o logo em Minha Conta → Dados da Loja</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div><!-- end etiq-panel-envio -->
+
     </div>
 
     <!-- CALENDÁRIO -->
@@ -1064,6 +1163,19 @@
           <h3 style="font-size:.95rem;margin-bottom:4px">Dados da Loja</h3>
           <p style="font-size:.75rem;color:var(--muted);margin-bottom:14px">Usado como remetente nas etiquetas de envio</p>
           <div class="auth-success" id="mc-cfg-ok" style="display:none;margin-bottom:12px"></div>
+          <div class="form-group">
+            <label>Logo da Loja (aparece na etiqueta de envio)</label>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+              <div id="cfg-logo-preview" style="width:52px;height:52px;border-radius:50%;background:var(--surface2);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+                <span style="font-size:.6rem;color:var(--muted);text-align:center;padding:2px">SEM LOGO</span>
+              </div>
+              <div>
+                <input type="file" id="cfg-loja-logo-file" accept="image/*" onchange="previewLogoLoja(this)" style="font-size:.78rem">
+                <div style="font-size:.67rem;color:var(--muted);margin-top:3px">JPG ou PNG, recomendado 200×200px circular</div>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="removerLogoLoja()" style="padding:2px 8px;font-size:.7rem;margin-top:4px">Remover logo</button>
+              </div>
+            </div>
+          </div>
           <div class="form-group"><label>Nome da Loja</label><input type="text" id="cfg-loja-nome" placeholder="Artnbrilho"></div>
           <div class="form-group"><label>CNPJ / CPF (opcional)</label><input type="text" id="cfg-loja-doc" placeholder="00.000.000/0000-00"></div>
           <div class="form-row" style="gap:10px">
