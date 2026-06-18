@@ -2484,6 +2484,228 @@ function cancelarVenda(id) {
 function fecharModalVenda(){document.getElementById('overlay-venda-det').classList.remove('open');}
 
 // ═══════════════════════════════════════════════════
+//  CONFIGURAÇÃO DA LOJA + CEP + ETIQUETA DE ENVIO
+// ═══════════════════════════════════════════════════
+async function buscarCep(cep, prefix) {
+  const raw = (cep || '').replace(/\D/g, '');
+  if (raw.length !== 8) return;
+  try {
+    const r = await fetch(`https://viacep.com.br/ws/${raw}/json/`);
+    const d = await r.json();
+    if (d.erro) return;
+    const map = {
+      [`${prefix}-logradouro`]: d.logradouro,
+      [`${prefix}-bairro`]:     d.bairro,
+      [`${prefix}-cidade`]:     d.localidade,
+      [`${prefix}-uf`]:         d.uf,
+    };
+    Object.entries(map).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && val) el.value = val;
+    });
+  } catch(e) {}
+}
+
+function carregarConfiguracaoLoja() {
+  const s = (id, val) => { const el = document.getElementById(id); if(el) el.value = val||''; };
+  s('cfg-loja-nome',        config.lojaNome        || 'Artnbrilho');
+  s('cfg-loja-doc',         config.lojaDoc         || '');
+  s('cfg-loja-cep',         config.lojaCep         || '');
+  s('cfg-loja-logradouro',  config.lojaLogradouro  || '');
+  s('cfg-loja-numero',      config.lojaNumero      || '');
+  s('cfg-loja-complemento', config.lojaComplemento || '');
+  s('cfg-loja-bairro',      config.lojaBairro      || '');
+  s('cfg-loja-cidade',      config.lojaCidade      || '');
+  s('cfg-loja-uf',          config.lojaUf          || '');
+}
+
+function salvarConfiguracaoLoja() {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  Object.assign(config, {
+    lojaNome:        v('cfg-loja-nome') || 'Artnbrilho',
+    lojaDoc:         v('cfg-loja-doc'),
+    lojaCep:         v('cfg-loja-cep'),
+    lojaLogradouro:  v('cfg-loja-logradouro'),
+    lojaNumero:      v('cfg-loja-numero'),
+    lojaComplemento: v('cfg-loja-complemento'),
+    lojaBairro:      v('cfg-loja-bairro'),
+    lojaCidade:      v('cfg-loja-cidade'),
+    lojaUf:          v('cfg-loja-uf'),
+  });
+  salvarConfig();
+  const ok = document.getElementById('mc-cfg-ok');
+  if (ok) { ok.textContent = 'Dados da loja salvos!'; ok.style.display = ''; setTimeout(()=>ok.style.display='none', 2500); }
+}
+
+let _etqVendaId = null;
+function abrirModalEtiqueta(vendaId) {
+  _etqVendaId = vendaId;
+  const v = vendas.find(x => x.id === vendaId);
+  if (!v) return;
+  const infoEl = document.getElementById('etq-venda-info');
+  if (infoEl) infoEl.textContent = `Pedido #${v.num} — ${v.cliente} — ${brl(v.total)}`;
+  // Check if client has address
+  const cli = clientes.find(c => c.id === v.clienteId);
+  const temEndereco = cli && (cli.logradouro || cli.cep);
+  const avisoEl = document.getElementById('etq-aviso-endereco');
+  if (avisoEl) avisoEl.style.display = temEndereco ? 'none' : '';
+  document.getElementById('overlay-etiqueta-envio').classList.add('open');
+}
+
+function fecharModalEtiqueta() {
+  document.getElementById('overlay-etiqueta-envio').classList.remove('open');
+  _etqVendaId = null;
+}
+
+function imprimirEtiquetaEnvio() {
+  const v = vendas.find(x => x.id === _etqVendaId);
+  if (!v) return;
+  const peso   = document.getElementById('etq-peso')?.value || '500';
+  const dims   = document.getElementById('etq-dims')?.value || '20x20x10cm';
+  const obsEtq = document.getElementById('etq-obs')?.value  || '';
+
+  const cli = clientes.find(c => c.id === v.clienteId);
+  const dest = {
+    nome:        v.cliente,
+    logradouro:  cli?.logradouro || '',
+    numero:      cli?.numero     || '',
+    complemento: cli?.complemento|| '',
+    bairro:      cli?.bairro     || '',
+    cidade:      cli?.cidade     || '',
+    uf:          cli?.uf         || '',
+    cep:         (cli?.cep||'').replace(/\D/g,''),
+  };
+
+  const rem = {
+    nome:       config.lojaNome       || 'Artnbrilho',
+    logradouro: config.lojaLogradouro || '',
+    numero:     config.lojaNumero     || '',
+    complemento:config.lojaComplemento|| '',
+    bairro:     config.lojaBairro     || '',
+    cidade:     config.lojaCidade     || 'São Paulo',
+    uf:         config.lojaUf         || 'SP',
+    cep:        (config.lojaCep||'').replace(/\D/g,''),
+  };
+
+  const codigoPedido = `ARN${String(v.num).padStart(6,'0')}${v.id.slice(-4).toUpperCase()}`;
+  const cepDest = dest.cep ? dest.cep.replace(/(\d{5})(\d{3})/,'$1-$2') : '';
+  const cepRem  = rem.cep  ? rem.cep.replace(/(\d{5})(\d{3})/,'$1-$2')  : '';
+
+  const remEnd = [rem.logradouro, rem.numero, rem.complemento].filter(Boolean).join(', ');
+  const remCid = [rem.bairro, rem.cidade, rem.uf ? rem.uf : ''].filter(Boolean).join(' — ');
+
+  const destEnd1 = [dest.logradouro, dest.numero, dest.complemento].filter(Boolean).join(', ');
+  const destEnd2 = [dest.bairro, dest.cidade, dest.uf].filter(Boolean).join(' — ');
+
+  const itensLista = v.itens.map(i => `${i.nome} x${i.qty}`).join(', ');
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Etiqueta — ${codigoPedido}</title>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+@page{margin:0;size:10cm 17cm}
+body{font-family:Arial,sans-serif;font-size:11px;background:#fff;width:10cm;padding:4mm}
+.label{border:1.5px dashed #888}
+.sec{padding:3mm 4mm;border-bottom:1px solid #000}
+.sec:last-child{border-bottom:none}
+.badge{background:#000;color:#fff;font-size:6.5px;font-weight:700;padding:1.5px 5px;letter-spacing:.5px;display:inline-block;vertical-align:middle}
+.logo-text{font-size:22px;font-weight:900;letter-spacing:3px;color:#b8893b;font-family:'Arial Black',Arial,sans-serif}
+.logo-sub{font-size:7px;letter-spacing:2px;color:#666;text-transform:uppercase;margin-top:1px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:3mm}
+.pkg{text-align:center;border-left:1px solid #ccc;padding-left:3mm;min-width:30mm}
+.pkg-vol{font-size:22px;font-weight:900;line-height:1}
+.pkg-w{font-size:13px;font-weight:700;margin-top:1mm}
+.pkg-d{font-size:8px;color:#555;margin-top:1mm}
+.order-code{text-align:center;font-size:10px;font-weight:700;letter-spacing:2px;padding:2mm 0;color:#555}
+.cep-dest{display:flex;align-items:center;gap:3mm}
+.cep-box{background:#000;color:#fff;font-size:19px;font-weight:900;padding:1.5mm 3mm;letter-spacing:2px;white-space:nowrap}
+.cidade-dest{font-size:14px;font-weight:700}
+.barcode-wrap{text-align:center;padding:2mm 0}
+.barcode-wrap svg{max-width:100%}
+.barcode-num{font-size:8px;font-weight:700;letter-spacing:2px;margin-top:1mm}
+.dace{font-size:6px;line-height:1.4;color:#333}
+.dace-title{font-size:7.5px;font-weight:700;margin-bottom:1.5mm;text-align:center}
+.dace-fields{display:flex;gap:2mm;margin-bottom:1.5mm}
+.dace-field{flex:1;border:.5px solid #000;padding:1px 3px}
+.dace-field b{font-size:6.5px}
+</style>
+</head>
+<body>
+<div class="label">
+  <div class="sec header">
+    <div>
+      <div class="logo-text">ARTNBRILHO</div>
+      <div class="logo-sub">Moda &amp; Acessórios</div>
+    </div>
+    <div class="pkg">
+      <div class="pkg-vol">1/1</div>
+      <div class="pkg-w">${peso}g</div>
+      <div class="pkg-d">${dims}</div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <span class="badge">REMETENTE</span> <strong style="font-size:12px">&nbsp;${rem.nome}</strong><br>
+    <span style="font-size:10px">${remEnd}${rem.complemento?' — '+rem.complemento:''}<br>
+    ${remCid}${cepRem?' – '+cepRem:''}</span>
+  </div>
+
+  <div class="order-code">${codigoPedido}</div>
+
+  <div class="sec cep-dest">
+    ${cepDest ? `<span class="cep-box">${dest.uf} ${cepDest}</span>` : ''}
+    <span class="cidade-dest">${dest.cidade||'–'}${dest.uf&&!cepDest?' — '+dest.uf:''}</span>
+  </div>
+
+  <div class="sec">
+    <span class="badge">ENTREGAR PARA</span> <strong style="font-size:12px">&nbsp;${dest.nome}</strong><br>
+    <span style="font-size:10px">${destEnd1||'Endereço não informado'}<br>
+    ${destEnd2}</span>
+  </div>
+
+  <div class="sec">
+    <span class="badge">OBSERVAÇÕES</span>&nbsp;${obsEtq || dest.nome}
+    ${v.obs ? `<br><span style="font-size:9px;color:#555">${v.obs}</span>` : ''}
+  </div>
+
+  <div class="barcode-wrap">
+    <svg id="barcode"></svg>
+    <div class="barcode-num">${codigoPedido}</div>
+  </div>
+
+  <div class="sec dace">
+    <div class="dace-title">DACE — DECLARAÇÃO AUXILIAR DE CONTEÚDO ELETRÔNICA</div>
+    <div class="dace-fields">
+      <div class="dace-field"><b>Nº:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+      <div class="dace-field"><b>SÉRIE:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+      <div class="dace-field"><b>EMISSÃO:</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+    </div>
+    <p>É contribuinte de ICMS qualquer pessoa física ou jurídica, que realize, com habitualidade ou em volume que caracterize intuito comercial, operações de circulação de mercadoria ou prestações de serviços de transportes interestadual e intermunicipal e de comunicação, ainda que as operações e prestações se iniciem no exterior, conforme art. 4º da Lei Complementar nº 87/96.</p>
+    <p style="margin-top:1mm">Constitui crime contra a ordem tributária suprimir ou reduzir tributo, ou contribuição social e qualquer acessório: quando negar ou deixar de fornecer, quando obrigatório, nota fiscal ou documento equivalente, relativa a venda de mercadoria ou prestação de serviço, efetivamente realizada ou fornecê-la em desacordo com a legislação, sob pena de reclusão de dois a cinco anos, e multa, conforme inciso V do art. 1º da Lei nº 8.137/90.</p>
+    <p style="margin-top:2mm;font-size:7px"><b>Conteúdo:</b> ${itensLista} | <b>Valor declarado:</b> ${brl(v.total)}</p>
+  </div>
+</div>
+<script>
+  window.onload = function() {
+    JsBarcode('#barcode','${codigoPedido}',{format:'CODE128',width:1.5,height:45,displayValue:false,margin:2});
+    setTimeout(()=>window.print(),600);
+  };
+<\/script>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=420,height=650');
+  if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
+  win.document.write(html);
+  win.document.close();
+  fecharModalEtiqueta();
+}
+
+// ═══════════════════════════════════════════════════
 //  DASHBOARD
 // ═══════════════════════════════════════════════════
 function renderDashboard() {
