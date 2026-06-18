@@ -1060,6 +1060,50 @@
           </div>
           <button class="btn btn-primary btn-sm" onclick="alterarSenha()">Alterar senha</button>
         </div>
+        <div class="table-wrap" style="padding:24px;margin-top:20px">
+          <h3 style="font-size:.95rem;margin-bottom:4px">Dados da Loja</h3>
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:14px">Usado como remetente nas etiquetas de envio</p>
+          <div class="auth-success" id="mc-cfg-ok" style="display:none;margin-bottom:12px"></div>
+          <div class="form-group"><label>Nome da Loja</label><input type="text" id="cfg-loja-nome" placeholder="Artnbrilho"></div>
+          <div class="form-group"><label>CNPJ / CPF (opcional)</label><input type="text" id="cfg-loja-doc" placeholder="00.000.000/0000-00"></div>
+          <div class="form-row" style="gap:10px">
+            <div class="form-group" style="flex:0 0 130px">
+              <label>CEP</label>
+              <input type="text" id="cfg-loja-cep" placeholder="00000-000" maxlength="9"
+                oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
+                onblur="buscarCep(this.value,'cfg-loja')">
+            </div>
+            <div class="form-group">
+              <label>Logradouro</label>
+              <input type="text" id="cfg-loja-logradouro" placeholder="Rua, Av...">
+            </div>
+          </div>
+          <div class="form-row" style="gap:10px">
+            <div class="form-group" style="flex:0 0 90px">
+              <label>Número</label>
+              <input type="text" id="cfg-loja-numero" placeholder="123">
+            </div>
+            <div class="form-group">
+              <label>Complemento</label>
+              <input type="text" id="cfg-loja-complemento" placeholder="Apto, Bloco...">
+            </div>
+          </div>
+          <div class="form-row" style="gap:10px">
+            <div class="form-group">
+              <label>Bairro</label>
+              <input type="text" id="cfg-loja-bairro" placeholder="Bairro">
+            </div>
+            <div class="form-group">
+              <label>Cidade</label>
+              <input type="text" id="cfg-loja-cidade" placeholder="São Paulo">
+            </div>
+            <div class="form-group" style="flex:0 0 58px">
+              <label>UF</label>
+              <input type="text" id="cfg-loja-uf" placeholder="SP" maxlength="2" style="text-transform:uppercase">
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarConfiguracaoLoja()" style="margin-top:6px">Salvar dados da loja</button>
+        </div>
       </div>
     </div>
 
@@ -1169,6 +1213,45 @@
     </div>
     <div class="form-group"><label>Data de Nascimento</label><input type="date" id="cli-nascimento"></div>
     <div class="form-group"><label>Observações</label><textarea id="cli-obs" rows="2" placeholder="Notas…"></textarea></div>
+    <div style="border-top:1.5px solid var(--border);padding-top:12px;margin-top:4px">
+      <div style="font-size:.68rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">Endereço de Entrega <span style="font-size:.6rem;font-weight:400">(para etiqueta de envio)</span></div>
+      <div class="form-row" style="gap:10px">
+        <div class="form-group" style="flex:0 0 130px">
+          <label>CEP</label>
+          <input type="text" id="cli-cep" placeholder="00000-000" maxlength="9"
+            oninput="this.value=this.value.replace(/\D/g,'').replace(/(\d{5})(\d)/,'$1-$2').slice(0,9)"
+            onblur="buscarCep(this.value,'cli')">
+        </div>
+        <div class="form-group">
+          <label>Logradouro</label>
+          <input type="text" id="cli-logradouro" placeholder="Rua, Av, Alameda...">
+        </div>
+      </div>
+      <div class="form-row" style="gap:10px">
+        <div class="form-group" style="flex:0 0 90px">
+          <label>Número</label>
+          <input type="text" id="cli-numero" placeholder="123">
+        </div>
+        <div class="form-group">
+          <label>Complemento</label>
+          <input type="text" id="cli-complemento" placeholder="Apto, Bloco...">
+        </div>
+      </div>
+      <div class="form-row" style="gap:10px">
+        <div class="form-group">
+          <label>Bairro</label>
+          <input type="text" id="cli-bairro" placeholder="Bairro">
+        </div>
+        <div class="form-group">
+          <label>Cidade</label>
+          <input type="text" id="cli-cidade" placeholder="São Paulo">
+        </div>
+        <div class="form-group" style="flex:0 0 58px">
+          <label>UF</label>
+          <input type="text" id="cli-uf" placeholder="SP" maxlength="2" style="text-transform:uppercase">
+        </div>
+      </div>
+    </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="fecharModalCliente()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarCliente()">Salvar</button>
@@ -1297,6 +1380,35 @@
   </div>
 </div>
 
+<!-- MODAL ETIQUETA DE ENVIO -->
+<div class="overlay" id="overlay-etiqueta-envio">
+  <div class="modal" style="max-width:420px">
+    <h3>Etiqueta de Envio</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px" id="etq-venda-info"></p>
+    <div id="etq-aviso-endereco" style="display:none;background:#fff8e6;border:1.5px solid var(--yellow);border-radius:9px;padding:10px 14px;font-size:.78rem;color:var(--yellow);margin-bottom:12px">
+      Cliente sem endereço cadastrado. Cadastre o endereço em <strong>Clientes</strong> para gerar a etiqueta completa.
+    </div>
+    <div class="form-row" style="gap:10px">
+      <div class="form-group">
+        <label>Peso total (g)</label>
+        <input type="number" id="etq-peso" value="500" min="1" step="1" placeholder="500">
+      </div>
+      <div class="form-group">
+        <label>Dimensões (CxLxA)</label>
+        <input type="text" id="etq-dims" value="20x20x10cm" placeholder="20x20x10cm">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Observações na etiqueta (opcional)</label>
+      <input type="text" id="etq-obs" placeholder="Ex: Frágil, não empilhar...">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="fecharModalEtiqueta()">Cancelar</button>
+      <button class="btn btn-primary" onclick="imprimirEtiquetaEnvio()">Gerar e Imprimir</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO USUÁRIO (admin) -->
 <div class="overlay" id="overlay-novo-usuario">
   <div class="modal">
@@ -1357,6 +1469,7 @@ let clientes   = JSON.parse(localStorage.getItem('ab_clientes')   || '[]');
 let carnes     = JSON.parse(localStorage.getItem('ab_carnes')     || '[]');
 let trocas     = JSON.parse(localStorage.getItem('ab_trocas')     || '[]');
 let metas        = JSON.parse(localStorage.getItem('ab_metas')        || '{}');
+let config       = JSON.parse(localStorage.getItem('ab_config')       || '{}');
 let eventosCalc  = JSON.parse(localStorage.getItem('ab_eventos_calc') || '[]');
 let sessaoAtual  = JSON.parse(sessionStorage.getItem('ab_sessao')     || 'null');
 let carrinhoVenda = [];
@@ -1379,6 +1492,7 @@ const salvarCarnes     = () => localStorage.setItem('ab_carnes',     JSON.string
 const salvarTrocas     = () => localStorage.setItem('ab_trocas',     JSON.stringify(trocas));
 const salvarMetas       = () => localStorage.setItem('ab_metas',        JSON.stringify(metas));
 const salvarEventosCalc = () => localStorage.setItem('ab_eventos_calc', JSON.stringify(eventosCalc));
+const salvarConfig      = () => localStorage.setItem('ab_config',       JSON.stringify(config));
 const salvarSessao     = () => sessaoAtual
   ? sessionStorage.setItem('ab_sessao', JSON.stringify(sessaoAtual))
   : sessionStorage.removeItem('ab_sessao');
@@ -1727,6 +1841,7 @@ function renderMinhaConta() {
   document.getElementById('mc-perfil').value  = PERFIL_LABEL[u.perfil];
   clearAuthMsgs('mc-erro','mc-ok');
   ['mc-senha-atual','mc-nova-senha','mc-nova-senha2'].forEach(id => document.getElementById(id).value = '');
+  carregarConfiguracaoLoja();
 }
 
 function salvarMinhaConta() {
@@ -2315,7 +2430,7 @@ function renderHistorico() {
       <td>${v.desconto>0?brl(v.desconto):'–'}</td>
       <td style="font-weight:700;color:var(--green)">${brl(v.total)}</td>
       <td><span class="badge badge-blue">${v.pagamento}</span></td>
-      <td style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="verVenda('${v.id}')">Ver</button><button class="btn btn-ghost btn-sm" style="color:#25d366" onclick="compartilharWhatsApp('${v.id}')">WhatsApp</button></td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="verVenda('${v.id}')">Ver</button><button class="btn btn-ghost btn-sm" style="color:#25d366" onclick="compartilharWhatsApp('${v.id}')">WhatsApp</button><button class="btn btn-ghost btn-sm" style="color:var(--brand)" onclick="abrirModalEtiqueta('${v.id}')">Etiqueta</button></td>
     </tr>`).join('');
 }
 
@@ -2677,9 +2792,17 @@ function abrirModalCliente(id = null) {
     el('cli-email').value = c.email||'';
     el('cli-nascimento').value = c.nascimento||'';
     el('cli-obs').value = c.obs||'';
+    el('cli-cep').value = c.cep||'';
+    el('cli-logradouro').value = c.logradouro||'';
+    el('cli-numero').value = c.numero||'';
+    el('cli-complemento').value = c.complemento||'';
+    el('cli-bairro').value = c.bairro||'';
+    el('cli-cidade').value = c.cidade||'';
+    el('cli-uf').value = c.uf||'';
   } else {
     el('modal-cli-titulo').textContent = 'Novo Cliente';
-    ['cli-id','cli-nome','cli-telefone','cli-email','cli-nascimento','cli-obs'].forEach(f=>el(f).value='');
+    ['cli-id','cli-nome','cli-telefone','cli-email','cli-nascimento','cli-obs',
+     'cli-cep','cli-logradouro','cli-numero','cli-complemento','cli-bairro','cli-cidade','cli-uf'].forEach(f=>el(f).value='');
   }
   document.getElementById('overlay-cliente').classList.add('open');
 }
@@ -2691,9 +2814,11 @@ function salvarCliente() {
   if (!v('cli-nome')) { alert('Informe o nome do cliente.'); return; }
   if (editandoClienteId) {
     const c = clientes.find(x => x.id === editandoClienteId);
-    Object.assign(c, { nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs') });
+    Object.assign(c, { nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs'),
+      cep:v('cli-cep'), logradouro:v('cli-logradouro'), numero:v('cli-numero'), complemento:v('cli-complemento'), bairro:v('cli-bairro'), cidade:v('cli-cidade'), uf:v('cli-uf') });
   } else {
-    clientes.push({ id:genId(), nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs'), criadoEm:agora() });
+    clientes.push({ id:genId(), nome:v('cli-nome'), telefone:v('cli-telefone'), email:v('cli-email'), nascimento:v('cli-nascimento'), obs:v('cli-obs'),
+      cep:v('cli-cep'), logradouro:v('cli-logradouro'), numero:v('cli-numero'), complemento:v('cli-complemento'), bairro:v('cli-bairro'), cidade:v('cli-cidade'), uf:v('cli-uf'), criadoEm:agora() });
   }
   salvarClientes(); fecharModalCliente(); renderClientes();
 }
