@@ -874,8 +874,8 @@
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
               <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin-bottom:10px">Formato PIMACO 6288</div>
               <ul style="font-size:.8rem;color:var(--muted);padding-left:16px;line-height:2">
-                <li>2 etiquetas por folha (tamanho carta)</li>
-                <li>101,6mm × 152,4mm cada etiqueta</li>
+                <li>4 etiquetas por folha (tamanho carta)</li>
+                <li>138,11mm × 106,36mm cada etiqueta (PIMACO 6288)</li>
                 <li>Logo da loja, destinatário, remetente, observação</li>
                 <li>Configure o logo em Minha Conta → Dados da Loja</li>
               </ul>
@@ -2715,54 +2715,55 @@ function fecharModalEtiqueta() {
 function gerarHTMLEtiquetaEnvio(dest, rem, info) {
   const logoHtml = rem.logo
     ? `<img src="${rem.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" alt="logo">`
-    : `<div style="text-align:center;line-height:1.15;padding:2px"><div style="font-size:8.5px;font-weight:900;color:#b8893b;letter-spacing:1px">ART &amp;</div><div style="font-size:8px;font-weight:900;color:#b8893b;letter-spacing:1px">BRILHO</div></div>`;
+    : `<div style="text-align:center;line-height:1.15;padding:1px"><div style="font-size:7px;font-weight:900;color:#b8893b;letter-spacing:.5px">ART &amp;</div><div style="font-size:6.5px;font-weight:900;color:#b8893b;letter-spacing:.5px">BRILHO</div></div>`;
 
   const labelBlock = `
-  <div style="width:100%;height:140mm;border:1.5px solid #bbb;border-radius:10px;padding:5mm 6mm;overflow:hidden;page-break-inside:avoid;font-family:Arial,Helvetica,sans-serif">
+  <div style="width:106.36mm;height:138.11mm;border:1px solid #bbb;padding:3mm 3.5mm;overflow:hidden;font-family:Arial,Helvetica,sans-serif;box-sizing:border-box">
     <!-- Header -->
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:3mm;border-bottom:1px solid #ddd;margin-bottom:2mm">
-      <div style="width:22mm;height:22mm;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:2mm;border-bottom:1px solid #ddd;margin-bottom:1.5mm">
+      <div style="width:16mm;height:16mm;border-radius:50%;background:#1a1a1a;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
         ${logoHtml}
       </div>
-      <div style="text-align:right;font-size:9.5px;line-height:1.8;font-family:Arial">
+      <div style="text-align:right;font-size:8px;line-height:1.7;font-family:Arial">
         <div><strong>PEDIDO:</strong>&nbsp;${info.pedido}</div>
         <div><strong>PLP:</strong>&nbsp;${info.plp}</div>
         <div><strong>DATA:</strong>&nbsp;${info.data}</div>
       </div>
     </div>
-    <div style="font-size:9px;color:#555;margin-bottom:2mm"><strong>NF:</strong>&nbsp;${info.nf}</div>
+    <div style="font-size:7.5px;color:#555;margin-bottom:1.5mm"><strong>NF:</strong>&nbsp;${info.nf}</div>
     <!-- Destinatario -->
-    <div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm;margin-top:4mm;margin-bottom:2.5mm">
-      <span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">DESTINATÁRIO</span>
-      <div style="font-size:13px;font-weight:700;margin-top:1.5mm;color:#111">${dest.nome}</div>
-      <div style="font-size:9.5px;line-height:1.5;margin-top:.5mm;color:#333">${dest.endereco}${dest.complemento ? '<br>'+dest.complemento : ''}</div>
-      <div style="font-size:9.5px;margin-top:.5mm;color:#333">${dest.cep ? '<strong>CEP:</strong> '+dest.cep : ''}${dest.cidade ? (dest.cep?'&nbsp;&nbsp;':'')+dest.cidade : ''}</div>
+    <div style="border:1.5px solid #222;border-radius:5px;position:relative;padding:2.5mm 3mm 2mm;margin-top:3mm;margin-bottom:2mm">
+      <span style="position:absolute;top:-4.5px;left:6px;background:#222;color:#fff;font-size:6px;font-weight:700;padding:1px 5px;letter-spacing:.5px;text-transform:uppercase">DESTINATÁRIO</span>
+      <div style="font-size:10.5px;font-weight:700;margin-top:1mm;color:#111">${dest.nome}</div>
+      <div style="font-size:8px;line-height:1.5;margin-top:.5mm;color:#333">${dest.endereco}${dest.complemento ? '<br>'+dest.complemento : ''}</div>
+      <div style="font-size:8px;margin-top:.5mm;color:#333">${dest.cep ? '<strong>CEP:</strong> '+dest.cep : ''}${dest.cidade ? (dest.cep?'&nbsp;&nbsp;':'')+dest.cidade : ''}</div>
     </div>
     <!-- Remetente -->
-    <div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm;margin-bottom:2.5mm">
-      <span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">REMETENTE</span>
-      <div style="font-size:13px;font-weight:700;margin-top:1.5mm;color:#111">${rem.nome}</div>
-      <div style="font-size:9.5px;line-height:1.5;margin-top:.5mm;color:#333">${rem.endereco}${rem.complemento ? '<br>'+rem.complemento : ''}</div>
-      <div style="font-size:9.5px;margin-top:.5mm;color:#333">${rem.cep ? '<strong>CEP:</strong> '+rem.cep : ''}${rem.cidade ? (rem.cep?'&nbsp;&nbsp;':'')+rem.cidade : ''}</div>
+    <div style="border:1.5px solid #222;border-radius:5px;position:relative;padding:2.5mm 3mm 2mm;margin-bottom:2mm">
+      <span style="position:absolute;top:-4.5px;left:6px;background:#222;color:#fff;font-size:6px;font-weight:700;padding:1px 5px;letter-spacing:.5px;text-transform:uppercase">REMETENTE</span>
+      <div style="font-size:10.5px;font-weight:700;margin-top:1mm;color:#111">${rem.nome}</div>
+      <div style="font-size:8px;line-height:1.5;margin-top:.5mm;color:#333">${rem.endereco}${rem.complemento ? '<br>'+rem.complemento : ''}</div>
+      <div style="font-size:8px;margin-top:.5mm;color:#333">${rem.cep ? '<strong>CEP:</strong> '+rem.cep : ''}${rem.cidade ? (rem.cep?'&nbsp;&nbsp;':'')+rem.cidade : ''}</div>
     </div>
-    ${info.obs ? '<div style="border:1.5px solid #222;border-radius:7px;position:relative;padding:3.5mm 4mm 3mm"><span style="position:absolute;top:-5.5px;left:8px;background:#222;color:#fff;font-size:7px;font-weight:700;padding:1px 7px;letter-spacing:.5px;text-transform:uppercase">OBSERVAÇÃO</span><div style="font-size:9.5px;line-height:1.5;margin-top:1.5mm;color:#333">'+info.obs+'</div></div>' : ''}
+    ${info.obs ? '<div style="border:1.5px solid #222;border-radius:5px;position:relative;padding:2.5mm 3mm 2mm"><span style="position:absolute;top:-4.5px;left:6px;background:#222;color:#fff;font-size:6px;font-weight:700;padding:1px 5px;letter-spacing:.5px;text-transform:uppercase">OBSERVAÇÃO</span><div style="font-size:8px;line-height:1.5;margin-top:1mm;color:#333">'+info.obs+'</div></div>' : ''}
   </div>`;
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Etiqueta de Envio</title>
+<title>Etiqueta de Envio – PIMACO 6288</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-@page{size:letter;margin:10mm 15mm}
+@page{size:letter;margin:1.59mm}
 body{background:#fff}
 </style>
 </head>
 <body>
-<div style="width:100%">
+<div style="display:grid;grid-template-columns:106.36mm 106.36mm;grid-template-rows:138.11mm 138.11mm;gap:0">
   ${labelBlock}
-  <div style="height:6mm"></div>
+  ${labelBlock}
+  ${labelBlock}
   ${labelBlock}
 </div>
 </body>
