@@ -3085,10 +3085,11 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info) {
   </svg>`;
 
   // Linha de campo com sublinhado (estilo formulário)
+  // -webkit-text-fill-color sobrepõe a detecção automática de links/datas do Chrome
   const fieldLine = (label, value) =>
-    `<div style="display:flex;align-items:flex-end;gap:2mm;margin-bottom:2mm;font-family:Arial;font-size:7.5pt;color:#1a1a1a">` +
-    `<span style="font-weight:700;white-space:nowrap">${label}</span>` +
-    `<span style="flex:1;border-bottom:0.7px solid #666;padding-bottom:0.5mm;min-height:3.5mm">${value||''}</span></div>`;
+    `<div style="display:flex;align-items:flex-end;gap:2mm;margin-bottom:2mm;font-family:Arial;font-size:7.5pt;color:#1a1a1a;-webkit-text-fill-color:#1a1a1a">` +
+    `<span style="font-weight:700;white-space:nowrap;color:#1a1a1a;-webkit-text-fill-color:#1a1a1a">${label}</span>` +
+    `<span style="flex:1;border-bottom:0.7px solid #666;padding-bottom:0.5mm;min-height:3.5mm;color:#1a1a1a;-webkit-text-fill-color:#1a1a1a">${value||''}</span></div>`;
 
   const pedidoLine = info.pedido !== null ? fieldLine('PEDIDO:', info.pedido||'') : '';
   const plpLine    = info.plp    !== null ? fieldLine('PLP:', info.plp||'') : '';
@@ -3128,12 +3129,14 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info) {
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="format-detection" content="telephone=no,date=no,address=no,email=no">
 <title>Etiqueta de Envio</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   @page{size:106.36mm 138.11mm;margin:0}
-  body{background:#fff}
+  body{background:#fff;color:#1a1a1a}
+  a,a:link,a:visited{color:inherit;text-decoration:none}
 </style>
 </head>
 <body>
