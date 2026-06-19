@@ -616,8 +616,14 @@
       </div>
       <!-- resultado do import em lote -->
       <div id="lote-resultado" style="display:none;margin:0 0 12px;padding:12px 16px;border-radius:10px;font-size:.8rem;line-height:1.7"></div>
+      <!-- barra de seleção em lote -->
+      <div id="barra-selecao" style="display:none;align-items:center;gap:12px;padding:10px 14px;margin-bottom:10px;background:var(--blue);color:#fff;border-radius:10px;font-size:.88rem">
+        <span id="qtd-selecionados">0 produto(s) selecionado(s)</span>
+        <button class="btn btn-sm" style="background:#fff;color:var(--blue);font-weight:700" onclick="excluirSelecionados()">🗑 Excluir selecionados</button>
+        <button class="btn btn-sm" style="margin-left:auto;background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5)" onclick="desmarcarTodos()">Cancelar</button>
+      </div>
       <div class="table-wrap">
-        <table><thead><tr><th></th><th>Código</th><th>Produto</th><th>Modelo</th><th>Categoria</th><th>Tam.</th><th>Cor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
+        <table><thead><tr><th style="width:36px;text-align:center"><input type="checkbox" id="chk-todos" onclick="toggleSelecionarTodos(this)" title="Selecionar todos"></th><th>Código</th><th>Produto</th><th>Modelo</th><th>Categoria</th><th>Tam.</th><th>Cor</th><th>Preço</th><th>Estoque</th><th>Status</th><th>Ações</th></tr></thead>
         <tbody id="tabela-produtos"></tbody></table>
       </div>
     </div>
@@ -2339,16 +2345,52 @@ function excluirProduto(id) {
   produtos=produtos.filter(p=>p.id!==id); salvarProdutos(); renderProdutos();
 }
 
+function toggleSelecionarTodos(chk) {
+  document.querySelectorAll('.chk-produto').forEach(c=>c.checked=chk.checked);
+  atualizarBarraSeleção();
+}
+
+function atualizarBarraSeleção() {
+  const marcados=document.querySelectorAll('.chk-produto:checked');
+  const todos=document.querySelectorAll('.chk-produto');
+  const barra=document.getElementById('barra-selecao');
+  const chkTodos=document.getElementById('chk-todos');
+  if(marcados.length>0){
+    barra.style.display='flex';
+    document.getElementById('qtd-selecionados').textContent=`${marcados.length} produto(s) selecionado(s)`;
+    if(chkTodos){chkTodos.indeterminate=marcados.length<todos.length;chkTodos.checked=marcados.length===todos.length;}
+  }else{
+    barra.style.display='none';
+    if(chkTodos){chkTodos.indeterminate=false;chkTodos.checked=false;}
+  }
+}
+
+function desmarcarTodos() {
+  document.querySelectorAll('.chk-produto').forEach(c=>c.checked=false);
+  const chkTodos=document.getElementById('chk-todos');
+  if(chkTodos){chkTodos.checked=false;chkTodos.indeterminate=false;}
+  document.getElementById('barra-selecao').style.display='none';
+}
+
+function excluirSelecionados() {
+  const ids=[...document.querySelectorAll('.chk-produto:checked')].map(c=>c.value);
+  if(!ids.length)return;
+  if(!confirm(`Excluir ${ids.length} produto(s) selecionado(s)? Essa ação não pode ser desfeita.`))return;
+  produtos=produtos.filter(p=>!ids.includes(p.id));
+  salvarProdutos(); renderProdutos();
+}
+
 function renderProdutos() {
   const busca=(document.getElementById('busca-produto').value||'').toLowerCase();
   const cat=document.getElementById('filtro-cat').value||'';
   const tbody=document.getElementById('tabela-produtos');
   const filtrados=produtos.filter(p=>(!busca||p.nome.toLowerCase().includes(busca)||p.codigo.toLowerCase().includes(busca)||(p.cor||'').toLowerCase().includes(busca))&&(!cat||p.categoria===cat));
-  if(!filtrados.length){tbody.innerHTML=`<tr><td colspan="11" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;return;}
+  if(!filtrados.length){tbody.innerHTML=`<tr><td colspan="12" style="padding:36px;text-align:center;color:var(--muted)">Nenhum produto encontrado.</td></tr>`;return;}
   tbody.innerHTML=filtrados.map(p=>{
     const sb=p.estoque===0?'<span class="badge badge-gray">Sem estoque</span>':p.estoque<=p.minimo?'<span class="badge badge-red">Baixo</span>':'<span class="badge badge-green">OK</span>';
     const thumb=p.imagem?`<img src="${p.imagem}" class="prod-thumb" alt="">`:`<div class="prod-thumb-ph">sem<br>img</div>`;
     return `<tr>
+      <td style="width:36px;text-align:center"><input type="checkbox" class="chk-produto" value="${p.id}" onchange="atualizarBarraSeleção()"></td>
       <td style="width:50px">${thumb}</td>
       <td><code style="font-size:.78rem;color:var(--muted)">${p.codigo}</code></td>
       <td><strong>${p.nome}</strong>${p.descricao?`<br><small style="color:var(--muted)">${p.descricao}</small>`:''}</td>
