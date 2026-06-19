@@ -154,6 +154,9 @@
     td { padding: 12px 14px; border-top: 1px solid var(--border); font-weight: 500; vertical-align: middle; }
     tr:hover td { background: var(--surface2); }
     .badge { display: inline-block; padding: 3px 9px; border-radius: 4px; font-size: .7rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+    .etq-slot { background:#f8f8f8;border:2px dashed #ccc;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;font-weight:700;color:#bbb;transition:all .15s;user-select:none }
+    .etq-slot:hover { background:#fff;border-color:var(--brand);color:var(--brand);border-style:solid }
+    .etq-slot.selected { background:rgba(184,137,59,.13);border-color:var(--brand);color:var(--brand);border-style:solid }
     .badge-green  { background: #e8f5ef; color: var(--green); }
     .badge-red    { background: #fde8e6; color: var(--red); }
     .badge-yellow { background: #fef3e0; color: var(--yellow); }
@@ -1609,6 +1612,28 @@
   </div>
 </div>
 
+<!-- MODAL POSIÇÃO DA ETIQUETA (PIMACO 6288) -->
+<div class="overlay" id="overlay-posicao-etq">
+  <div class="modal" style="max-width:310px;text-align:center">
+    <h3 style="margin-bottom:4px">Posição na Folha</h3>
+    <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Selecione em qual etiqueta da folha imprimir</p>
+    <!-- mini folha letter landscape: 2×2 -->
+    <div style="background:#d8d8d8;border-radius:8px;padding:10px;display:inline-block">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;width:224px;height:172px">
+        <div class="etq-slot selected" id="etq-slot-1" onclick="selecionarSlotEtq(1)">1</div>
+        <div class="etq-slot" id="etq-slot-2" onclick="selecionarSlotEtq(2)">2</div>
+        <div class="etq-slot" id="etq-slot-3" onclick="selecionarSlotEtq(3)">3</div>
+        <div class="etq-slot" id="etq-slot-4" onclick="selecionarSlotEtq(4)">4</div>
+      </div>
+    </div>
+    <p style="font-size:.75rem;color:var(--muted);margin-top:10px">Posição <strong id="etq-pos-label">1</strong> selecionada (canto superior esquerdo)</p>
+    <div class="modal-footer" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="fecharSeletorEtq()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarImpressaoEtq()">🖨 Imprimir</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NOVO USUÁRIO (admin) -->
 <div class="overlay" id="overlay-novo-usuario">
   <div class="modal">
@@ -3045,50 +3070,68 @@ function fecharModalEtiqueta() {
   _etqVendaId = null;
 }
 
-function gerarHTMLEtiquetaEnvio(dest, rem, info) {
+// ─── Seletor de posição da etiqueta ───────────────────────────────────────────
+let _etqPrintData = null;
+let _etqPosicao   = 1;
+const _etqPosLabels = ['canto superior esquerdo','canto superior direito','canto inferior esquerdo','canto inferior direito'];
+
+function abrirSeletorPosicao(dest, rem, info) {
+  _etqPrintData = {dest, rem, info};
+  _etqPosicao = 1;
+  selecionarSlotEtq(1);
+  document.getElementById('overlay-posicao-etq').classList.add('open');
+}
+function selecionarSlotEtq(pos) {
+  _etqPosicao = pos;
+  [1,2,3,4].forEach(n => {
+    const el = document.getElementById('etq-slot-'+n);
+    if (el) el.classList.toggle('selected', n === pos);
+  });
+  const lbl = document.getElementById('etq-pos-label');
+  if (lbl) lbl.textContent = pos + ' — ' + _etqPosLabels[pos-1];
+}
+function fecharSeletorEtq() {
+  document.getElementById('overlay-posicao-etq').classList.remove('open');
+  _etqPrintData = null;
+}
+function confirmarImpressaoEtq() {
+  if (!_etqPrintData) return;
+  const {dest, rem, info} = _etqPrintData;
+  fecharSeletorEtq();
+  const html = gerarHTMLEtiquetaEnvio(dest, rem, info, _etqPosicao);
+  const win = window.open('', '_blank', 'width=900,height=720');
+  if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
+  win.document.write(html);
+  win.document.close();
+}
+
+function gerarHTMLEtiquetaEnvio(dest, rem, info, pos) {
   const G  = '#b8893b';
   const GL = '#c9a55a';
   const BG = '#fdf8f0';
   const DK = '#1a1a1a';
 
-  // Ornate lotus mandala — rich quarter anchored at top-left corner (0,0)
-  const _pt = (R, ang, ln, wd) => {
-    const r = ang*Math.PI/180, c = Math.cos(r), s = Math.sin(r);
-    const cx=R*c, cy=R*s, tx=(R+ln)*c, ty=(R+ln)*s, bx=(R-ln*0.25)*c, by=(R-ln*0.25)*s, px=-s*wd, py=c*wd;
-    return `M${bx.toFixed(1)} ${by.toFixed(1)} Q${(cx+px).toFixed(1)} ${(cy+py).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)} Q${(cx-px).toFixed(1)} ${(cy-py).toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)} Z`;
-  };
-  const _ring = (R, n, ln, wd) => Array.from({length:n}, (_,i)=>_pt(R, i*(90/(n-1)), ln, wd)).join(' ');
-  const _dots = (R, n, rad, op) => Array.from({length:n}, (_,i)=>{const a=i*(90/(n-1))*Math.PI/180;return `<circle cx="${(R*Math.cos(a)).toFixed(1)}" cy="${(R*Math.sin(a)).toFixed(1)}" r="${rad}" fill-opacity="${op}"/>`;}).join('');
-  const mandala = `<svg viewBox="-3 -3 168 168" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%">
-    <g fill="none" stroke="${G}" stroke-opacity=".5">
-      <circle cx="0" cy="0" r="20" stroke-width=".5"/><circle cx="0" cy="0" r="42" stroke-width=".5"/><circle cx="0" cy="0" r="68" stroke-width=".6"/><circle cx="0" cy="0" r="98" stroke-width=".5"/><circle cx="0" cy="0" r="132" stroke-width=".4"/>
-    </g>
-    <g fill="${G}" stroke="${G}" stroke-width=".4">
-      <g fill-opacity=".55" stroke-opacity=".65"><path d="${_ring(20,7,14,7)}"/></g>
-      <g fill-opacity=".36" stroke-opacity=".55"><path d="${_ring(42,9,19,8)}"/></g>
-      <g fill-opacity=".24" stroke-opacity=".5"><path d="${_ring(68,11,23,9)}"/></g>
-      <g fill-opacity=".16" stroke-opacity=".42"><path d="${_ring(98,13,27,10)}"/></g>
-      <g fill-opacity=".1" stroke-opacity=".36"><path d="${_ring(132,15,30,11)}"/></g>
-    </g>
-    <g fill="${G}">
-      ${_dots(31,7,1.5,.5)}${_dots(55,9,1.7,.38)}${_dots(83,11,1.9,.26)}
-      <circle cx="0" cy="0" r="7" fill-opacity=".5"/><circle cx="0" cy="0" r="3.5" fill="${BG}"/>
-    </g>
-  </svg>`;
+  // PIMACO 6288 on letter landscape (279.4×215.9mm): 2 cols × 2 rows, each 138.11×106.36mm, margin 1.59mm
+  const posMap = {1:[1.59,1.59], 2:[139.70,1.59], 3:[1.59,107.95], 4:[139.70,107.95]};
+  const [pL, pT] = posMap[pos] || posMap[1];
+
+  // Mandala: ellipses rotated around origin — much more opaque than previous version
+  const pr = (R,n,rx,ry,op) => Array.from({length:n},(_,i)=>`<ellipse cx="${R}" cy="0" rx="${rx}" ry="${ry}" transform="rotate(${(i*90/(n-1)).toFixed(2)})" fill="${G}" fill-opacity="${op}"/>`).join('');
+  const mandala = `<svg viewBox="0 0 155 155" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%"><g fill="none" stroke="${G}"><circle cx="0" cy="0" r="14" stroke-width=".6" stroke-opacity=".55"/><circle cx="0" cy="0" r="28" stroke-width=".7" stroke-opacity=".55"/><circle cx="0" cy="0" r="46" stroke-width=".8" stroke-opacity=".58"/><circle cx="0" cy="0" r="68" stroke-width=".8" stroke-opacity=".52"/><circle cx="0" cy="0" r="94" stroke-width=".7" stroke-opacity=".45"/><circle cx="0" cy="0" r="124" stroke-width=".6" stroke-opacity=".35"/></g>${pr(14,9,7,3.5,.88)}${pr(28,9,10,5,.78)}${pr(46,11,12.5,6.5,.66)}${pr(68,13,15,7.5,.52)}${pr(94,15,17.5,9,.38)}${pr(124,17,19,9.5,.24)}<circle cx="0" cy="0" r="8" fill="${G}" fill-opacity=".75"/><circle cx="0" cy="0" r="4" fill="${BG}"/></svg>`;
 
   // Lotus ornament above brand name
-  const lotusTop = `<svg viewBox="0 0 80 22" xmlns="http://www.w3.org/2000/svg" style="width:46px;height:13px;display:block;margin:0 auto 1mm"><g fill="${G}"><path d="M40 19c-4-6-12-10-15-15 3 4 11 7 15 6 4 1 12-2 15-6-3 5-11 9-15 15z" opacity=".8"/><path d="M40 12c-2-3-6-5-7-8 1 2 6 4 7 3 1 1 5-1 7-3-1 3-5 5-7 11z" opacity=".45"/><circle cx="40" cy="3" r="1.8" opacity=".7"/></g><line x1="4" y1="11" x2="22" y2="11" stroke="${G}" stroke-width=".9"/><line x1="58" y1="11" x2="76" y2="11" stroke="${G}" stroke-width=".9"/></svg>`;
+  const lotus = `<svg viewBox="0 0 80 22" xmlns="http://www.w3.org/2000/svg" style="width:48px;height:14px;display:block;margin:0 auto 1.5mm"><g fill="${G}"><path d="M40 19c-4-6-12-10-15-15 3 4 11 7 15 6 4 1 12-2 15-6-3 5-11 9-15 15z" opacity=".85"/><path d="M40 12c-2-3-6-5-7-8 1 2 6 4 7 3 1 1 5-1 7-3-1 3-5 5-7 11z" opacity=".48"/><circle cx="40" cy="3" r="2" opacity=".75"/></g><line x1="3" y1="11" x2="22" y2="11" stroke="${G}" stroke-width="1"/><line x1="58" y1="11" x2="77" y2="11" stroke="${G}" stroke-width="1"/></svg>`;
 
   // Footer ornament
-  const footerOrn = `<svg viewBox="0 0 160 18" xmlns="http://www.w3.org/2000/svg" style="width:88px;height:10px;display:block;margin:0 auto"><line x1="2" y1="9" x2="62" y2="9" stroke="${G}" stroke-width=".9"/><g fill="${G}" transform="translate(80,9)"><path d="M0 7c-3-4-8-6-10-9 3 3 9 5 10 4 1 1 7-1 10-4-2 3-7 5-10 9z" opacity=".8"/><path d="M0 3c-1-2-4-3-5-5 1 2 4 3 5 2 1 1 4 0 5-2-1 2-4 3-5 8z" opacity=".42"/><circle cx="0" cy="-3" r="1.5" opacity=".7"/></g><line x1="98" y1="9" x2="158" y2="9" stroke="${G}" stroke-width=".9"/></svg>`;
+  const footer = `<svg viewBox="0 0 160 18" xmlns="http://www.w3.org/2000/svg" style="width:92px;height:11px;display:block;margin:0 auto"><line x1="2" y1="9" x2="60" y2="9" stroke="${G}" stroke-width="1"/><g fill="${G}" transform="translate(80,9)"><path d="M0 7c-3-4-8-6-10-9 3 3 9 5 10 4 1 1 7-1 10-4-2 3-7 5-10 9z" opacity=".85"/><path d="M0 3c-1-2-4-3-5-5 1 2 4 3 5 2 1 1 4 0 5-2-1 2-4 3-5 8z" opacity=".45"/><circle cx="0" cy="-3" r="1.8" opacity=".75"/></g><line x1="100" y1="9" x2="158" y2="9" stroke="${G}" stroke-width="1"/></svg>`;
 
   const box = (label, content, grow) =>
-    `<div style="border:2px solid ${DK};border-radius:7px;position:relative;padding:4mm 5mm 2mm;flex:${grow};min-height:0">` +
+    `<div style="border:2.5px solid ${DK};border-radius:7px;position:relative;padding:4mm 5mm 2.5mm;flex:${grow};min-height:0">` +
     `<span style="position:absolute;top:-1px;left:-1px;background:${DK};color:#fff;font-size:6px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;border-radius:6px 0 6px 0;padding:2.5px 9px;font-family:Arial">${label}</span>` +
     `<div>${content}</div></div>`;
 
-  const rs = `font-size:8px;line-height:1.6;color:#333;font-family:Arial`;
-  const ns = `font-size:11px;font-weight:700;color:${DK};font-family:Arial;margin-bottom:1mm`;
+  const rs = `font-size:8px;line-height:1.65;color:#333;font-family:Arial`;
+  const ns = `font-size:11.5px;font-weight:700;color:${DK};font-family:Arial;margin-bottom:1mm`;
 
   const destContent =
     `<div style="${ns}">${dest.nome}</div>` +
@@ -3101,9 +3144,8 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info) {
     `<div style="${rs}">${rem.endereco}${rem.complemento ? '<br>'+rem.complemento : ''}</div>` +
     `<div style="${rs}">${rem.cep ? '<strong>CEP:</strong> '+rem.cep : ''}${rem.cidade ? '&nbsp;&nbsp;'+rem.cidade : ''}</div>`;
 
-  // PEDIDO/PLP/DATA — "LABEL: ___value___" style with underline
   const ufield = (lbl, val) =>
-    `<div style="font-size:8px;font-family:Arial;color:${DK};margin-bottom:3mm;white-space:nowrap"><span style="font-weight:700;letter-spacing:.7px">${lbl}:</span> <span style="border-bottom:1.3px solid ${DK};display:inline-block;min-width:34mm;vertical-align:bottom;padding-bottom:1.5px;font-size:7.5px">${val||''}</span></div>`;
+    `<div style="font-size:8px;font-family:Arial;color:${DK};margin-bottom:3mm;white-space:nowrap"><span style="font-weight:700;letter-spacing:.7px">${lbl}:</span> <span style="border-bottom:1.5px solid ${DK};display:inline-block;min-width:32mm;vertical-align:bottom;padding-bottom:1.5px;font-size:7.5px">${val||''}</span></div>`;
 
   const infoRight =
     (info.pedido !== null ? ufield('PEDIDO', info.pedido) : '') +
@@ -3111,53 +3153,48 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info) {
     ufield('DATA', info.data);
 
   const nfLine = info.nf !== null
-    ? `<div style="font-size:8.5px;font-family:Arial;color:${DK};padding:2mm 0 .5mm;flex-shrink:0"><strong>NF:</strong> <span style="border-bottom:1.3px solid ${DK};display:inline-block;flex:1;min-width:100mm;vertical-align:bottom;padding-bottom:1.5px;font-size:8px">${info.nf||''}</span></div>`
+    ? `<div style="font-size:8.5px;font-family:Arial;color:${DK};padding:1.5mm 0 .5mm;flex-shrink:0"><strong>NF:</strong> <span style="border-bottom:1.5px solid ${DK};display:inline-block;min-width:108mm;vertical-align:bottom;padding-bottom:1.5px;font-size:8px">${info.nf||''}</span></div>`
     : '';
 
   const obsContent = info.obs
     ? `<div style="${rs}">${info.obs}</div>`
     : `<div style="height:3mm"></div>`;
 
-  return `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Etiqueta de Envio</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}@page{size:138.11mm 106.36mm;margin:0}body{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
-</head>
-<body>
-<div style="width:138.11mm;height:106.36mm;background:${BG};border:2px solid ${G};border-radius:9px;padding:3mm 5mm 3mm;position:relative;overflow:hidden;display:flex;flex-direction:column">
-
-  <!-- Header: mandala (absolute) | spacer | brand center | info right -->
-  <div style="position:absolute;top:0;left:0;width:34mm;height:34mm;overflow:hidden;border-radius:9px 0 0 0;pointer-events:none">${mandala}</div>
+  // Label inner HTML (reused in the absolute-positioned wrapper)
+  const labelInner = `
+  <div style="position:absolute;top:0;left:0;width:42mm;height:42mm;overflow:hidden;border-radius:9px 0 0 0;pointer-events:none">${mandala}</div>
   <div style="display:flex;align-items:center;gap:2mm;padding-bottom:2mm;border-bottom:1px solid ${GL};flex-shrink:0">
-    <div style="width:30mm;flex-shrink:0"></div>
+    <div style="width:38mm;flex-shrink:0"></div>
     <div style="flex:1;text-align:center;padding:0 2mm">
-      ${lotusTop}
-      <div style="font-family:Georgia,serif;font-size:21px;font-weight:700;color:${DK};letter-spacing:.5px;line-height:1.05">Art'n Brilho</div>
-      <div style="display:flex;align-items:center;gap:2mm;margin:1.5mm auto;max-width:48mm">
+      ${lotus}
+      <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:${DK};letter-spacing:.3px;line-height:1.05">Art'n Brilho</div>
+      <div style="display:flex;align-items:center;gap:2mm;margin:2mm auto;max-width:52mm">
         <div style="flex:1;height:1px;background:${GL}"></div>
-        <div style="color:${G};font-size:9px;line-height:1">◆</div>
+        <div style="color:${G};font-size:10px;line-height:1">◆</div>
         <div style="flex:1;height:1px;background:${GL}"></div>
       </div>
-      <div style="font-family:Georgia,serif;font-size:8.5px;font-style:italic;color:${G}">Moda feminina</div>
+      <div style="font-family:Georgia,serif;font-size:9px;font-style:italic;color:${G}">Moda feminina</div>
     </div>
     <div style="flex-shrink:0;text-align:left">${infoRight}</div>
   </div>
-
-  <!-- NF line (optional) -->
   ${nfLine}
-
-  <!-- Section boxes — stacked vertically, fill remaining height -->
   <div style="flex:1;display:flex;flex-direction:column;gap:2.5mm;min-height:0;margin-top:2mm">
     ${box('DESTINATÁRIO', destContent, 1.15)}
     ${box('REMETENTE', remContent, 1)}
     ${box('OBSERVAÇÃO', obsContent, 0.8)}
   </div>
+  <div style="flex-shrink:0;padding-top:2mm">${footer}</div>`;
 
-  <!-- Footer ornament -->
-  <div style="flex-shrink:0;padding-top:2mm">${footerOrn}</div>
-
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Etiqueta de Envio</title>
+<style>*{box-sizing:border-box;margin:0;padding:0}@page{size:letter landscape;margin:0}body{background:#fff;width:279.4mm;height:215.9mm;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
+</head>
+<body>
+<div style="position:absolute;left:${pL}mm;top:${pT}mm;width:138.11mm;height:106.36mm;background:${BG};border:2px solid ${G};border-radius:9px;padding:3.5mm 5mm 3mm 3.5mm;overflow:hidden;display:flex;flex-direction:column">
+  ${labelInner}
 </div>
 <script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script>
 </body>
@@ -3197,12 +3234,8 @@ function imprimirEtiquetaEnvio() {
     obs:    obsEtq || `${peso}g – ${dims}`,
   };
 
-  const html = gerarHTMLEtiquetaEnvio(dest, rem, info);
-  const win = window.open('', '_blank', 'width=640,height=860');
-  if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
-  win.document.write(html);
-  win.document.close();
   fecharModalEtiqueta();
+  abrirSeletorPosicao(dest, rem, info);
 }
 
 // ─── Etiqueta avulsa (da página Etiquetas) ──────────────────────────────────────────────────
@@ -3359,11 +3392,7 @@ function imprimirEtiquetaAvulsa() {
     logo:        config.lojaLogo        || '',
   };
 
-  const html = gerarHTMLEtiquetaEnvio(dest, rem, info);
-  const win = window.open('', '_blank', 'width=640,height=860');
-  if (!win) { alert('Permita popups para gerar a etiqueta.'); return; }
-  win.document.write(html);
-  win.document.close();
+  abrirSeletorPosicao(dest, rem, info);
 }
 
 // ═══════════════════════════════════════════════════
