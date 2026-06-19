@@ -1617,9 +1617,9 @@
   <div class="modal" style="max-width:310px;text-align:center">
     <h3 style="margin-bottom:4px">Posição na Folha</h3>
     <p style="font-size:.8rem;color:var(--muted);margin-bottom:14px">Selecione em qual etiqueta da folha imprimir</p>
-    <!-- mini folha letter landscape: 2×2 -->
+    <!-- mini folha letter portrait: 2×2 -->
     <div style="background:#d8d8d8;border-radius:8px;padding:10px;display:inline-block">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;width:224px;height:172px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;width:160px;height:208px">
         <div class="etq-slot selected" id="etq-slot-1" onclick="selecionarSlotEtq(1)">1</div>
         <div class="etq-slot" id="etq-slot-2" onclick="selecionarSlotEtq(2)">2</div>
         <div class="etq-slot" id="etq-slot-3" onclick="selecionarSlotEtq(3)">3</div>
@@ -3111,8 +3111,8 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info, pos) {
   const BG = '#fdf8f0';
   const DK = '#1a1a1a';
 
-  // PIMACO 6288 on letter landscape (279.4×215.9mm): 2 cols × 2 rows, each 138.11×106.36mm, margin 1.59mm
-  const posMap = {1:[1.59,1.59], 2:[139.70,1.59], 3:[1.59,107.95], 4:[139.70,107.95]};
+  // PIMACO 6288 on letter portrait (215.9×279.4mm): 2 cols × 2 rows, each 106.36×138.11mm, margin 1.59mm
+  const posMap = {1:[1.59,1.59], 2:[107.95,1.59], 3:[1.59,139.70], 4:[107.95,139.70]};
   const [pL, pT] = posMap[pos] || posMap[1];
 
   // Mandala: ellipses rotated around origin — much more opaque than previous version
@@ -3153,7 +3153,7 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info, pos) {
     ufield('DATA', info.data);
 
   const nfLine = info.nf !== null
-    ? `<div style="font-size:8.5px;font-family:Arial;color:${DK};padding:1.5mm 0 .5mm;flex-shrink:0"><strong>NF:</strong> <span style="border-bottom:1.5px solid ${DK};display:inline-block;min-width:108mm;vertical-align:bottom;padding-bottom:1.5px;font-size:8px">${info.nf||''}</span></div>`
+    ? `<div style="font-size:8.5px;font-family:Arial;color:${DK};padding:1.5mm 0 .5mm;flex-shrink:0"><strong>NF:</strong> <span style="border-bottom:1.5px solid ${DK};display:inline-block;min-width:72mm;vertical-align:bottom;padding-bottom:1.5px;font-size:8px">${info.nf||''}</span></div>`
     : '';
 
   const obsContent = info.obs
@@ -3162,12 +3162,12 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info, pos) {
 
   // Label inner HTML (reused in the absolute-positioned wrapper)
   const labelInner = `
-  <div style="position:absolute;top:0;left:0;width:42mm;height:42mm;overflow:hidden;border-radius:9px 0 0 0;pointer-events:none">${mandala}</div>
+  <div style="position:absolute;top:0;left:0;width:36mm;height:36mm;overflow:hidden;border-radius:9px 0 0 0;pointer-events:none">${mandala}</div>
   <div style="display:flex;align-items:center;gap:2mm;padding-bottom:2mm;border-bottom:1px solid ${GL};flex-shrink:0">
-    <div style="width:38mm;flex-shrink:0"></div>
+    <div style="width:30mm;flex-shrink:0"></div>
     <div style="flex:1;text-align:center;padding:0 2mm">
       ${lotus}
-      <div style="font-family:Georgia,serif;font-size:22px;font-weight:700;color:${DK};letter-spacing:.3px;line-height:1.05">Art'n Brilho</div>
+      <div style="font-family:Georgia,serif;font-size:18px;font-weight:700;color:${DK};letter-spacing:.3px;line-height:1.05">Art'n Brilho</div>
       <div style="display:flex;align-items:center;gap:2mm;margin:2mm auto;max-width:52mm">
         <div style="flex:1;height:1px;background:${GL}"></div>
         <div style="color:${G};font-size:10px;line-height:1">◆</div>
@@ -3190,10 +3190,10 @@ function gerarHTMLEtiquetaEnvio(dest, rem, info, pos) {
 <head>
 <meta charset="UTF-8">
 <title>Etiqueta de Envio</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}@page{size:letter landscape;margin:0}body{background:#fff;width:279.4mm;height:215.9mm;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
+<style>*{box-sizing:border-box;margin:0;padding:0}@page{size:letter;margin:0}body{background:#fff;width:215.9mm;height:279.4mm;position:relative;-webkit-print-color-adjust:exact;print-color-adjust:exact}</style>
 </head>
 <body>
-<div style="position:absolute;left:${pL}mm;top:${pT}mm;width:138.11mm;height:106.36mm;background:${BG};border:2px solid ${G};border-radius:9px;padding:3.5mm 5mm 3mm 3.5mm;overflow:hidden;display:flex;flex-direction:column">
+<div style="position:absolute;left:${pL}mm;top:${pT}mm;width:106.36mm;height:138.11mm;background:${BG};border:2px solid ${G};border-radius:9px;padding:3.5mm 5mm 3mm 3.5mm;overflow:hidden;display:flex;flex-direction:column">
   ${labelInner}
 </div>
 <script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script>
