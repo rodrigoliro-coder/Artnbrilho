@@ -313,8 +313,11 @@
   <div class="auth-panel active" id="panel-login">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>ART'N <span>BRILHO</span></h1>
-        <p>Sistema de Gestão</p>
+        <div class="auth-logo-brand" style="display:none;text-align:center;margin-bottom:12px"><img class="auth-brand-img" style="max-height:100px;max-width:220px;object-fit:contain;border-radius:10px" alt="Art'n Brilho"></div>
+        <div class="auth-logo-txt">
+          <h1>ART'N <span>BRILHO</span></h1>
+          <p>Sistema de Gestão</p>
+        </div>
       </div>
       <h2>Entrar</h2>
       <p>Acesse com seu usuário e senha.</p>
@@ -342,8 +345,11 @@
   <div class="auth-panel" id="panel-registro">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>ART'N <span>BRILHO</span></h1>
-        <p>Sistema de Gestão</p>
+        <div class="auth-logo-brand" style="display:none;text-align:center;margin-bottom:12px"><img class="auth-brand-img" style="max-height:100px;max-width:220px;object-fit:contain;border-radius:10px" alt="Art'n Brilho"></div>
+        <div class="auth-logo-txt">
+          <h1>ART'N <span>BRILHO</span></h1>
+          <p>Sistema de Gestão</p>
+        </div>
       </div>
       <h2>Criar nova conta</h2>
       <div class="auth-error" id="reg-erro"></div>
@@ -399,8 +405,11 @@
   <div class="auth-panel" id="panel-recuperar">
     <div class="auth-card">
       <div class="auth-logo">
-        <h1>ART'N <span>BRILHO</span></h1>
-        <p>Sistema de Gestão</p>
+        <div class="auth-logo-brand" style="display:none;text-align:center;margin-bottom:12px"><img class="auth-brand-img" style="max-height:100px;max-width:220px;object-fit:contain;border-radius:10px" alt="Art'n Brilho"></div>
+        <div class="auth-logo-txt">
+          <h1>ART'N <span>BRILHO</span></h1>
+          <p>Sistema de Gestão</p>
+        </div>
       </div>
       <h2>Recuperar senha</h2>
       <div class="auth-error"   id="rec-erro"></div>
@@ -457,8 +466,11 @@
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo">
-      <h1>ART'N <span>BRILHO</span></h1>
-      <small>Sistema de Gestão</small>
+      <img id="sidebar-logo-img" style="display:none;max-height:52px;max-width:170px;object-fit:contain;margin-bottom:6px;border-radius:8px" alt="Art'n Brilho">
+      <div id="sidebar-logo-txt">
+        <h1>ART'N <span>BRILHO</span></h1>
+        <small>Sistema de Gestão</small>
+      </div>
     </div>
 
     <div class="user-chip">
@@ -2241,7 +2253,9 @@ function importarFotosEmLote(input) {
         const w = Math.round(img.width * scale), h = Math.round(img.height * scale);
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        aplicarMarcaDagua(canvas, ctx);
         prod.imagem = canvas.toDataURL('image/jpeg', 0.75);
         ok.push(`${prod.codigo} (${prod.nome})`);
         processarProximo();
@@ -2252,6 +2266,47 @@ function importarFotosEmLote(input) {
   }
 
   processarProximo();
+}
+
+function aplicarMarcaDagua(canvas, ctx) {
+  const texto = "Art'n Brilho";
+  const lado = Math.min(canvas.width, canvas.height);
+  const fontSize = Math.max(13, Math.round(lado * 0.046));
+  const pad = Math.round(fontSize * 0.75);
+  ctx.save();
+  ctx.font = `700 ${fontSize}px 'Manrope','Segoe UI',sans-serif`;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 5;
+  ctx.shadowOffsetX = 1;
+  ctx.shadowOffsetY = 1;
+  ctx.fillStyle = 'rgba(255,255,255,0.78)';
+  ctx.fillText(texto, canvas.width - pad, canvas.height - pad);
+  ctx.restore();
+}
+
+function renderLogoApp() {
+  const logo = config.lojaLogo;
+  document.querySelectorAll('.auth-logo-brand').forEach(wrap => {
+    const img = wrap.querySelector('img');
+    if (logo && img) {
+      img.src = logo;
+      wrap.style.display = '';
+      const txt = wrap.nextElementSibling;
+      if (txt) txt.style.display = 'none';
+    } else {
+      wrap.style.display = 'none';
+      const txt = wrap.nextElementSibling;
+      if (txt) txt.style.display = '';
+    }
+  });
+  const sbImg = document.getElementById('sidebar-logo-img');
+  const sbTxt = document.getElementById('sidebar-logo-txt');
+  if (sbImg && sbTxt) {
+    if (logo) { sbImg.src = logo; sbImg.style.display = 'block'; sbTxt.style.display = 'none'; }
+    else { sbImg.style.display = 'none'; sbTxt.style.display = ''; }
+  }
 }
 
 function previewImagem(input) {
@@ -2270,7 +2325,9 @@ function previewImagem(input) {
       }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
-      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      aplicarMarcaDagua(canvas, ctx);
       const base64 = canvas.toDataURL('image/jpeg', 0.75);
       const prev = document.getElementById('prod-imagem-preview');
       prev.src = base64; prev.style.display = 'block';
@@ -2908,6 +2965,7 @@ function previewLogoLoja(input) {
       config.lojaLogo = dataUrl;
       const prev = document.getElementById('cfg-logo-preview');
       if (prev) prev.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+      renderLogoApp();
     };
     img.src = e.target.result;
   };
@@ -2918,6 +2976,7 @@ function removerLogoLoja() {
   config.lojaLogo = '';
   const prev = document.getElementById('cfg-logo-preview');
   if (prev) prev.innerHTML = `<span style="font-size:.6rem;color:var(--muted);text-align:center;padding:2px">SEM LOGO</span>`;
+  renderLogoApp();
 }
 
 function carregarConfiguracaoLoja() {
@@ -2956,6 +3015,7 @@ function salvarConfiguracaoLoja() {
   });
   salvarConfig();
   atualizarPreviewRemetente();
+  renderLogoApp();
   const ok = document.getElementById('mc-cfg-ok');
   if (ok) { ok.textContent = 'Dados da loja salvos!'; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'), 2500); }
 }
@@ -4144,6 +4204,7 @@ document.querySelectorAll('.overlay').forEach(ov=>{
   await seedAdminPadrao();
   seedProdutosDemo();
   seedAcessoriosV2();
+  renderLogoApp();
   if (sessaoAtual) {
     const u = usuarios.find(x => x.id === sessaoAtual.id);
     if (u && u.ativo) { iniciarApp(); return; }
