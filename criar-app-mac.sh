@@ -8,6 +8,7 @@ set -e
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 HTML_SRC="$REPO_DIR/index.html"
+LOGO_SRC="$REPO_DIR/logo.png"
 APP_DIR="$HOME/Desktop/Artnbrilho.app"
 
 echo ""
@@ -30,8 +31,28 @@ mkdir -p "$APP_DIR/Contents/Resources"
 # Copia o sistema (HTML único) para dentro do aplicativo
 cp "$HTML_SRC" "$APP_DIR/Contents/Resources/app.html"
 
+# ── Ícone (opcional): converte logo.png → AppIcon.icns ──
+ICON_KEY=""
+if [ -f "$LOGO_SRC" ]; then
+  echo "🎨 Gerando ícone a partir de logo.png..."
+  ICONSET_DIR="$(mktemp -d)/AppIcon.iconset"
+  mkdir -p "$ICONSET_DIR"
+  for SIZE in 16 32 64 128 256 512; do
+    sips -z $SIZE $SIZE "$LOGO_SRC" --out "$ICONSET_DIR/icon_${SIZE}x${SIZE}.png" > /dev/null 2>&1
+    DOUBLE=$((SIZE * 2))
+    sips -z $DOUBLE $DOUBLE "$LOGO_SRC" --out "$ICONSET_DIR/icon_${SIZE}x${SIZE}@2x.png" > /dev/null 2>&1
+  done
+  iconutil -c icns "$ICONSET_DIR" -o "$APP_DIR/Contents/Resources/AppIcon.icns"
+  rm -rf "$ICONSET_DIR"
+  ICON_KEY="  <key>CFBundleIconFile</key><string>AppIcon</string>"
+  echo "   ✅ Ícone aplicado com sucesso"
+else
+  echo "   ℹ️  Nenhum logo.png encontrado — app ficará sem ícone personalizado"
+  echo "      (Coloque um arquivo logo.png na pasta do projeto e rode novamente)"
+fi
+
 # ── Info.plist (faz o macOS reconhecer a pasta como um app) ──
-cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
+cat > "$APP_DIR/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -45,6 +66,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<'PLIST'
   <key>CFBundleExecutable</key><string>Artnbrilho</string>
   <key>LSMinimumSystemVersion</key><string>10.13</string>
   <key>NSHighResolutionCapable</key><true/>
+$ICON_KEY
 </dict>
 </plist>
 PLIST
@@ -73,6 +95,10 @@ LAUNCH
 
 chmod +x "$APP_DIR/Contents/MacOS/Artnbrilho"
 
+# Força o macOS a reconhecer o novo ícone imediatamente
+touch "$APP_DIR"
+
+echo ""
 echo "✅ Aplicativo criado com sucesso!"
 echo ""
 echo "   📍 Local:  $APP_DIR"
