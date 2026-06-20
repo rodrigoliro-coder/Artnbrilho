@@ -23,107 +23,170 @@
     /* ══ AUTH ══ */
     #auth-wrap {
       position: fixed; inset: 0; z-index: 1000;
-      display: flex;
+      background: #0d0b08;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
     }
     #auth-wrap.hidden { display: none; }
 
+    /* — Janela macOS — */
+    .auth-window {
+      width: 100%; max-width: 1180px; height: 710px;
+      border-radius: 14px; overflow: hidden;
+      display: flex; flex-direction: column;
+      box-shadow: 0 50px 140px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.07);
+    }
+    .auth-titlebar {
+      height: 36px; flex-shrink: 0; background: #252019;
+      display: flex; align-items: center; padding: 0 14px; position: relative;
+      border-bottom: 1px solid rgba(0,0,0,.3);
+    }
+    .auth-tb-dots { display: flex; gap: 8px; }
+    .auth-tb-dot { width: 13px; height: 13px; border-radius: 50%; }
+    .auth-tb-dot-r { background: #ff5f57; }
+    .auth-tb-dot-y { background: #febc2e; }
+    .auth-tb-dot-g { background: #28c840; }
+    .auth-titlebar-title {
+      position: absolute; left: 50%; transform: translateX(-50%);
+      font-size: .7rem; color: rgba(255,255,255,.35); font-weight: 600;
+      letter-spacing: .05em; white-space: nowrap;
+    }
+    .auth-window-body { flex: 1; display: flex; overflow: hidden; }
+
     /* — Painel esquerdo — */
     .auth-left {
-      flex: 1; background: var(--bg);
+      flex: 1;
+      background: linear-gradient(155deg, #f9f2e8 0%, #ede0cc 100%);
       display: flex; flex-direction: column; justify-content: center;
-      padding: 60px 56px; position: relative; overflow: hidden;
+      padding: 50px 56px; position: relative; overflow: hidden;
     }
-    .auth-left::before {
-      content: ''; position: absolute;
-      right: -100px; top: -100px;
-      width: 500px; height: 500px; border-radius: 50%;
-      border: 72px solid rgba(184,137,59,.07); pointer-events: none;
+    .auth-mandala-wm {
+      position: absolute; color: var(--brand); pointer-events: none; opacity: .065;
     }
-    .auth-left::after {
-      content: ''; position: absolute;
-      left: -80px; bottom: -80px;
-      width: 390px; height: 390px; border-radius: 50%;
-      border: 60px solid rgba(184,137,59,.055); pointer-events: none;
+    .auth-mandala-wm-bl { bottom: -130px; left: -130px; width: 480px; height: 480px; }
+    .auth-mandala-wm-tr { top: -130px; right: -130px; width: 480px; height: 480px; }
+
+    /* logo + mandala */
+    .auth-logo-wrap { display: flex; align-items: center; gap: 18px; margin-bottom: 34px; }
+    .auth-logo-mandala-wrap { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+    .auth-logo-mandala-svg { position: absolute; inset: 0; width: 100%; height: 100%; color: var(--brand); }
+    .auth-logo-brand, .auth-logo-txt {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1;
     }
-    .auth-left-logo-area { margin-bottom: 52px; }
-    .auth-left-badge {
-      width: 76px; height: 76px; border-radius: 50%;
-      border: 2px solid var(--brand);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      line-height: 1.1; gap: 0;
-    }
-    .auth-left-badge .badge-line { font-family: 'Bebas Neue', sans-serif; letter-spacing: .1em; font-size: .8rem; }
-    .auth-left-badge .badge-line-top { color: var(--brand); }
-    .auth-left-badge .badge-line-bot { color: var(--dark); }
-    .auth-left-badge .badge-sep { width: 38px; height: 1px; background: var(--brand); opacity: .4; margin: 2px 0; }
-    .auth-left-title {
-      font-size: 2rem; font-weight: 800; color: var(--dark); line-height: 1.25; margin-bottom: 16px;
-    }
+    .auth-logo-brand img { max-height: 62px; max-width: 62px; object-fit: contain; border-radius: 50%; }
+    .auth-ltxt-lines { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+    .auth-ltxt-lines .lt1 { font-family: 'Bebas Neue', sans-serif; letter-spacing: .2em; font-size: .68rem; color: var(--brand); }
+    .auth-ltxt-lines .ltsep { width: 30px; height: 1px; background: var(--brand); opacity: .45; margin: 2px 0; }
+    .auth-ltxt-lines .lt2 { font-family: 'Bebas Neue', sans-serif; letter-spacing: .14em; font-size: .68rem; color: var(--dark); }
+    .auth-logo-tagline { font-size: .58rem; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
+
+    .auth-left-title { font-size: 1.95rem; font-weight: 800; color: var(--dark); line-height: 1.2; margin-bottom: 10px; }
     .auth-left-title em { font-style: normal; color: var(--brand); }
-    .auth-left-desc { font-size: .9rem; color: var(--muted); line-height: 1.78; margin-bottom: 48px; max-width: 380px; }
-    .auth-features { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 400px; }
-    .auth-feature { display: flex; align-items: flex-start; gap: 14px; }
-    .auth-feature-icon {
-      width: 42px; height: 42px; flex-shrink: 0;
-      background: rgba(184,137,59,.12); border-radius: 10px;
+
+    /* ornamento */
+    .auth-ornament { display: flex; align-items: center; gap: 8px; margin: 14px 0 16px; }
+    .auth-orn-line { height: 1px; background: linear-gradient(to right, rgba(184,137,59,.5), rgba(184,137,59,.15)); width: 80px; }
+    .auth-orn-line-r { background: linear-gradient(to left, rgba(184,137,59,.5), rgba(184,137,59,.15)); flex: 1; max-width: 160px; }
+    .auth-orn-diamond { width: 7px; height: 7px; background: var(--brand); transform: rotate(45deg); opacity: .8; flex-shrink: 0; }
+    .auth-orn-dot { width: 3px; height: 3px; background: var(--brand); border-radius: 50%; opacity: .5; }
+
+    .auth-left-desc { font-size: .84rem; color: #7a6a58; line-height: 1.85; margin-bottom: 30px; max-width: 370px; }
+
+    /* cards de features */
+    .auth-feature-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; max-width: 440px; }
+    .auth-feature-card {
+      background: rgba(255,255,255,.72); border: 1px solid rgba(184,137,59,.16);
+      border-radius: 12px; padding: 14px 15px;
+      display: flex; align-items: flex-start; gap: 12px;
+      box-shadow: 0 2px 14px rgba(184,137,59,.07), 0 1px 2px rgba(0,0,0,.03);
+    }
+    .auth-fc-icon {
+      width: 36px; height: 36px; flex-shrink: 0;
+      background: rgba(184,137,59,.1); border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
     }
-    .auth-feature-icon svg { width: 20px; height: 20px; stroke: var(--brand); fill: none; stroke-width: 2; }
-    .auth-feature-info h4 { font-size: .88rem; font-weight: 700; color: var(--dark); }
-    .auth-feature-info p { font-size: .72rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+    .auth-fc-icon svg { width: 17px; height: 17px; stroke: var(--brand); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .auth-fc-text h4 { font-size: .78rem; font-weight: 700; color: var(--dark); margin-bottom: 3px; }
+    .auth-fc-text p { font-size: .63rem; color: #8a7760; line-height: 1.45; }
+
+    /* separador vertical */
+    .auth-sep {
+      width: 1px; background: rgba(184,137,59,.2); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .auth-sep-diamond {
+      width: 9px; height: 9px; background: #ede0cc;
+      border: 1.5px solid rgba(184,137,59,.55); transform: rotate(45deg);
+    }
 
     /* — Painel direito — */
     .auth-right {
-      width: 460px; flex-shrink: 0;
-      background: #fff; border-left: 1px solid var(--border);
+      width: 430px; flex-shrink: 0; background: #f9f6f0;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 48px 44px; overflow-y: auto;
+      padding: 40px 38px; overflow-y: auto;
     }
-    .auth-right-inner { width: 100%; max-width: 360px; }
+    .auth-right-inner { width: 100%; }
+
+    .auth-login-card {
+      background: #fff; border: 1px solid rgba(184,137,59,.18);
+      border-radius: 18px; padding: 36px 30px 28px;
+      box-shadow: 0 8px 48px rgba(184,137,59,.1), 0 1px 4px rgba(0,0,0,.04);
+      position: relative; overflow: hidden;
+    }
+    .auth-login-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(to right, var(--brand-dark), var(--brand), var(--brand-light));
+    }
+
     .auth-lock-icon {
-      width: 58px; height: 58px; border-radius: 50%;
-      background: rgba(184,137,59,.1);
+      width: 58px; height: 58px; border-radius: 50%; background: #f5ede0;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 24px;
+      margin: 0 auto 18px;
+      box-shadow: 0 2px 12px rgba(184,137,59,.14);
     }
-    .auth-lock-icon svg { width: 26px; height: 26px; stroke: var(--brand); fill: none; stroke-width: 2; }
+    .auth-lock-icon svg { width: 25px; height: 25px; stroke: var(--brand); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .auth-panel { display: none; width: 100%; }
     .auth-panel.active { display: block; }
-    .auth-card {
-      background: transparent; border: none; border-radius: 0;
-      padding: 0; box-shadow: none; position: static; overflow: visible;
-    }
+    .auth-card { background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; position: static; overflow: visible; }
     .auth-card::before { display: none; }
-    .auth-card h2 {
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.9rem; letter-spacing: .06em;
-      color: var(--dark); margin-bottom: 4px; text-align: center;
+    .auth-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: .08em; color: var(--dark); margin-bottom: 4px; text-align: center; }
+    .auth-card h2 + p { font-size: .79rem; color: var(--muted); margin-bottom: 22px; text-align: center; }
+
+    .auth-field { margin-bottom: 13px; }
+    .auth-field label { display: block; font-size: .6rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin-bottom: 5px; }
+    .auth-fi-wrap { position: relative; }
+    .auth-fi {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      width: 15px; height: 15px; stroke: #b0a090; fill: none; stroke-width: 2;
+      stroke-linecap: round; stroke-linejoin: round; pointer-events: none;
     }
-    .auth-card h2 + p { font-size: .8rem; color: var(--muted); margin-bottom: 22px; text-align: center; }
-    .auth-field { margin-bottom: 14px; }
-    .auth-field label { display: block; font-size: .62rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin-bottom: 5px; }
     .auth-field input, .auth-field select {
-      width: 100%; background: #f9f7f3; border: 1.5px solid var(--border);
-      color: var(--text); border-radius: 9px; padding: 11px 13px; font-family: 'Manrope', sans-serif; font-size: .88rem; font-weight: 500;
+      width: 100%; background: #f6f2ec; border: 1.5px solid #e4d8c6;
+      color: var(--text); border-radius: 9px; padding: 11px 13px;
+      font-family: 'Manrope', sans-serif; font-size: .88rem; font-weight: 500;
       transition: border-color .15s, box-shadow .15s;
     }
-    .auth-field input:focus, .auth-field select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(184,137,59,.15); }
+    .auth-fi-wrap input { padding-left: 38px; }
+    .auth-field input:focus, .auth-field select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(184,137,59,.13); }
     .auth-field .pw-wrap { position: relative; }
-    .auth-field .pw-wrap input { padding-right: 60px; }
+    .auth-fi-wrap.pw-wrap input { padding-left: 38px; padding-right: 66px; }
+    .auth-field .pw-wrap input { padding-right: 66px; }
     .pw-toggle {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: .75rem; font-weight: 700; padding: 0; font-family: 'Manrope', sans-serif;
+      font-size: .72rem; font-weight: 700; padding: 0; font-family: 'Manrope', sans-serif;
     }
-    .pw-toggle:hover { color: var(--text); }
+    .pw-toggle:hover { color: var(--brand); }
     .auth-btn {
-      width: 100%; padding: 13px; border: none; border-radius: 9px;
-      background: var(--dark); color: #fff; font-size: .85rem; font-weight: 700; font-family: 'Manrope', sans-serif;
-      cursor: pointer; transition: background .15s; margin-top: 6px; letter-spacing: .03em;
+      width: 100%; padding: 13px; border: none; border-radius: 10px;
+      background: var(--dark); color: #fff; font-size: .84rem; font-weight: 700;
+      font-family: 'Manrope', sans-serif; cursor: pointer;
+      transition: background .15s, box-shadow .15s; margin-top: 6px; letter-spacing: .05em;
     }
-    .auth-btn:hover { background: var(--dark2); }
-    .auth-links { display: flex; justify-content: space-between; margin-top: 16px; font-size: .78rem; }
-    .auth-link { color: var(--brand); cursor: pointer; background: none; border: none; font-size: .78rem; font-family: 'Manrope', sans-serif; font-weight: 700; }
+    .auth-btn:hover { background: var(--dark2); box-shadow: 0 4px 16px rgba(31,28,24,.22); }
+    .auth-links { display: flex; justify-content: space-between; margin-top: 18px; font-size: .76rem; }
+    .auth-link { color: var(--brand); cursor: pointer; background: none; border: none; font-size: .76rem; font-family: 'Manrope', sans-serif; font-weight: 700; }
     .auth-link:hover { text-decoration: underline; }
     .auth-error {
       background: #fbe9e6; border: 1px solid #f1c9c2;
@@ -138,10 +201,11 @@
     }
     .auth-success.show { display: block; }
     .auth-hint { font-size: .75rem; color: var(--muted); margin-top: 4px; }
-    .auth-right-footer { font-size: .68rem; color: var(--muted); text-align: center; margin-top: 36px; letter-spacing: .03em; }
-    @media (max-width: 860px) {
-      .auth-left { display: none; }
-      .auth-right { width: 100%; border-left: none; }
+    .auth-right-footer { font-size: .67rem; color: var(--muted); text-align: center; margin-top: 18px; letter-spacing: .04em; }
+    @media (max-width: 960px) {
+      .auth-left, .auth-sep { display: none; }
+      .auth-right { width: 100%; background: var(--bg); }
+      .auth-window { height: auto; min-height: 90vh; max-width: 480px; }
     }
 
     /* ══ APP LAYOUT ══ */
@@ -368,204 +432,282 @@
      TELAS DE AUTENTICAÇÃO
 ══════════════════════════════════════ -->
 <div id="auth-wrap">
+<div class="auth-window">
 
-  <!-- PAINEL ESQUERDO -->
+  <!-- BARRA MACOS -->
+  <div class="auth-titlebar">
+    <div class="auth-tb-dots">
+      <div class="auth-tb-dot auth-tb-dot-r"></div>
+      <div class="auth-tb-dot auth-tb-dot-y"></div>
+      <div class="auth-tb-dot auth-tb-dot-g"></div>
+    </div>
+    <div class="auth-titlebar-title">Art'n Brilho – Controle de Estoque e Vendas</div>
+  </div>
+
+  <div class="auth-window-body">
+
+  <!-- ════ PAINEL ESQUERDO ════ -->
   <div class="auth-left">
-    <div class="auth-left-logo-area">
-      <div class="auth-logo-brand" style="display:none">
-        <img class="auth-brand-img" style="max-height:76px;max-width:160px;object-fit:contain;border-radius:50%" alt="Art'n Brilho">
+
+    <!-- Mandalas marca d'água -->
+    <svg class="auth-mandala-wm auth-mandala-wm-bl" viewBox="0 0 500 500" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(250,250)">
+        <circle r="242" stroke-width="0.4"/><circle r="226" stroke-width="0.25"/>
+        <ellipse cy="-194" rx="14" ry="40" stroke-width="0.7"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(30)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(60)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(90)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(120)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(150)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(180)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(210)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(240)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(270)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(300)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(330)"/>
+        <circle cy="-214" r="2.5" fill="currentColor" stroke="none"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(30)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(60)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(90)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(120)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(150)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(180)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(210)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(240)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(270)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(300)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(330)"/>
+        <circle r="160" stroke-width="0.55"/>
+        <ellipse cy="-130" rx="15" ry="36" stroke-width="0.8"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(45)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(90)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(135)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(180)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(225)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(270)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(315)"/>
+        <circle r="88" stroke-width="0.6"/><circle r="68" stroke-width="0.35"/>
+        <ellipse cy="-76" rx="9" ry="20" stroke-width="0.75"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(45)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(90)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(135)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(180)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(225)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(270)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(315)"/>
+        <circle r="44" stroke-width="0.55"/><circle r="24" stroke-width="0.4"/>
+        <circle r="6" fill="currentColor" stroke="none"/>
+      </g>
+    </svg>
+    <svg class="auth-mandala-wm auth-mandala-wm-tr" viewBox="0 0 500 500" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate(250,250)">
+        <circle r="242" stroke-width="0.4"/><circle r="226" stroke-width="0.25"/>
+        <ellipse cy="-194" rx="14" ry="40" stroke-width="0.7"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(30)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(60)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(90)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(120)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(150)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(180)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(210)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(240)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(270)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(300)"/><ellipse cy="-194" rx="14" ry="40" stroke-width="0.7" transform="rotate(330)"/>
+        <circle cy="-214" r="2.5" fill="currentColor" stroke="none"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(30)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(60)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(90)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(120)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(150)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(180)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(210)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(240)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(270)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(300)"/><circle cy="-214" r="2.5" fill="currentColor" stroke="none" transform="rotate(330)"/>
+        <circle r="160" stroke-width="0.55"/>
+        <ellipse cy="-130" rx="15" ry="36" stroke-width="0.8"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(45)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(90)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(135)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(180)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(225)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(270)"/><ellipse cy="-130" rx="15" ry="36" stroke-width="0.8" transform="rotate(315)"/>
+        <circle r="88" stroke-width="0.6"/><circle r="68" stroke-width="0.35"/>
+        <ellipse cy="-76" rx="9" ry="20" stroke-width="0.75"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(45)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(90)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(135)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(180)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(225)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(270)"/><ellipse cy="-76" rx="9" ry="20" stroke-width="0.75" transform="rotate(315)"/>
+        <circle r="44" stroke-width="0.55"/><circle r="24" stroke-width="0.4"/>
+        <circle r="6" fill="currentColor" stroke="none"/>
+      </g>
+    </svg>
+
+    <!-- Logo com mandala -->
+    <div class="auth-logo-wrap">
+      <div class="auth-logo-mandala-wrap">
+        <svg class="auth-logo-mandala-svg" viewBox="0 0 90 90" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(45,45)">
+            <circle r="43" stroke-width="0.9"/><circle r="37" stroke-width="0.5"/>
+            <ellipse cy="-30" rx="4" ry="10" stroke-width="1"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(45)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(90)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(135)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(180)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(225)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(270)"/><ellipse cy="-30" rx="4" ry="10" stroke-width="1" transform="rotate(315)"/>
+            <circle cy="-39" r="1.4" fill="currentColor" stroke="none"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(45)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(90)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(135)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(180)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(225)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(270)"/><circle cy="-39" r="1.4" fill="currentColor" stroke="none" transform="rotate(315)"/>
+            <circle r="20" stroke-width="0.7"/><circle r="11" stroke-width="0.5"/>
+            <circle r="3" fill="currentColor" stroke="none"/>
+          </g>
+        </svg>
+        <div class="auth-logo-brand" style="display:none">
+          <img class="auth-brand-img" style="max-height:62px;max-width:62px;object-fit:contain;border-radius:50%" alt="Art'n Brilho">
+        </div>
+        <div class="auth-logo-txt">
+          <div class="auth-ltxt-lines">
+            <span class="lt1">ART'N</span>
+            <div class="ltsep"></div>
+            <span class="lt2">BRILHO</span>
+          </div>
+        </div>
       </div>
-      <div class="auth-logo-txt auth-left-badge">
-        <span class="badge-line badge-line-top">ART'N</span>
-        <div class="badge-sep"></div>
-        <span class="badge-line badge-line-bot">BRILHO</span>
-      </div>
+      <div class="auth-logo-tagline">Sistema de Gestão</div>
     </div>
 
+    <!-- Título -->
     <h2 class="auth-left-title">Bem-vinda ao painel<br><em>Art'n Brilho</em></h2>
+
+    <!-- Ornamento -->
+    <div class="auth-ornament">
+      <div class="auth-orn-line"></div>
+      <div class="auth-orn-dot"></div>
+      <div class="auth-orn-diamond"></div>
+      <div class="auth-orn-dot"></div>
+      <div class="auth-orn-line auth-orn-line-r"></div>
+    </div>
+
     <p class="auth-left-desc">Gerencie sua loja com elegância e praticidade.<br>Estoque, vendas e clientes sempre sob controle.</p>
 
-    <div class="auth-features">
-      <div class="auth-feature">
-        <div class="auth-feature-icon">
+    <!-- Cards de features -->
+    <div class="auth-feature-cards">
+      <div class="auth-feature-card">
+        <div class="auth-fc-icon">
           <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
         </div>
-        <div class="auth-feature-info">
+        <div class="auth-fc-text">
           <h4>Estoque</h4>
-          <p>Controle seus produtos com facilidade</p>
+          <p>Acompanhe seus produtos e saldos em tempo real.</p>
         </div>
       </div>
-      <div class="auth-feature">
-        <div class="auth-feature-icon">
+      <div class="auth-feature-card">
+        <div class="auth-fc-icon">
           <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
         </div>
-        <div class="auth-feature-info">
+        <div class="auth-fc-text">
           <h4>Vendas</h4>
-          <p>Registre e acompanhe todas as vendas</p>
+          <p>Gerencie vendas, pagamentos e faturamento.</p>
         </div>
       </div>
-      <div class="auth-feature">
-        <div class="auth-feature-icon">
+      <div class="auth-feature-card">
+        <div class="auth-fc-icon">
           <svg viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 014-4h4a4 4 0 014 4v2"/><path d="M21 15v6m-3-3h6" stroke-width="2.5"/></svg>
         </div>
-        <div class="auth-feature-info">
+        <div class="auth-fc-text">
           <h4>Clientes</h4>
-          <p>Cadastro e histórico de clientes</p>
+          <p>Cadastre e acompanhe seus clientes com facilidade.</p>
         </div>
       </div>
-      <div class="auth-feature">
-        <div class="auth-feature-icon">
+      <div class="auth-feature-card">
+        <div class="auth-fc-icon">
           <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </div>
-        <div class="auth-feature-info">
+        <div class="auth-fc-text">
           <h4>Pedidos</h4>
-          <p>Gestão completa de pedidos</p>
+          <p>Controle pedidos, prazos e status de entrega.</p>
         </div>
       </div>
     </div>
+
+  </div><!-- /auth-left -->
+
+  <!-- Separador vertical com losango -->
+  <div class="auth-sep">
+    <div class="auth-sep-diamond"></div>
   </div>
 
-  <!-- PAINEL DIREITO -->
+  <!-- ════ PAINEL DIREITO ════ -->
   <div class="auth-right">
     <div class="auth-right-inner">
+      <div class="auth-login-card">
 
-      <!-- LOGIN -->
-      <div class="auth-panel active" id="panel-login">
-        <div class="auth-card">
-          <div class="auth-lock-icon">
-            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-          </div>
-          <h2>Entrar</h2>
-          <p>Acesse com seu usuário e senha.</p>
-          <div class="auth-error" id="login-erro"></div>
-          <div class="auth-field">
-            <label>Usuário</label>
-            <input type="text" id="login-usuario" placeholder="Seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin()">
-          </div>
-          <div class="auth-field">
-            <label>Senha</label>
-            <div class="pw-wrap">
-              <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()">
-              <button class="pw-toggle" onclick="togglePw('login-senha', this)" type="button">Mostrar</button>
+        <!-- LOGIN -->
+        <div class="auth-panel active" id="panel-login">
+          <div class="auth-card">
+            <div class="auth-lock-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
             </div>
-          </div>
-          <button class="auth-btn" onclick="fazerLogin()">Entrar</button>
-          <div class="auth-links">
-            <button class="auth-link" onclick="irParaPanel('panel-registro')">Criar conta</button>
-            <button class="auth-link" onclick="irParaPanel('panel-recuperar')">Esqueci minha senha</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- CRIAR CONTA -->
-      <div class="auth-panel" id="panel-registro">
-        <div class="auth-card">
-          <h2>Criar nova conta</h2>
-          <p>Preencha os dados abaixo para criar sua conta.</p>
-          <div class="auth-error" id="reg-erro"></div>
-          <div class="auth-success" id="reg-ok"></div>
-          <div class="form-row" style="gap:10px">
-            <div class="auth-field">
-              <label>Nome completo *</label>
-              <input type="text" id="reg-nome" placeholder="Seu nome">
-            </div>
-            <div class="auth-field">
-              <label>Usuário *</label>
-              <input type="text" id="reg-usuario" placeholder="sem espaços">
-            </div>
-          </div>
-          <div class="auth-field">
-            <label>Senha *</label>
-            <div class="pw-wrap">
-              <input type="password" id="reg-senha" placeholder="Mínimo 6 caracteres">
-              <button class="pw-toggle" onclick="togglePw('reg-senha', this)" type="button">Mostrar</button>
-            </div>
-          </div>
-          <div class="auth-field">
-            <label>Confirmar senha *</label>
-            <div class="pw-wrap">
-              <input type="password" id="reg-senha2" placeholder="Repita a senha">
-              <button class="pw-toggle" onclick="togglePw('reg-senha2', this)" type="button">Mostrar</button>
-            </div>
-          </div>
-          <div class="auth-field">
-            <label>Pergunta de segurança *</label>
-            <select id="reg-pergunta">
-              <option value="">Selecione…</option>
-              <option>Qual o nome do seu primeiro animal de estimação?</option>
-              <option>Qual o nome da cidade onde você nasceu?</option>
-              <option>Qual o nome da sua mãe?</option>
-              <option>Qual foi sua primeira escola?</option>
-              <option>Qual o modelo do seu primeiro carro?</option>
-            </select>
-          </div>
-          <div class="auth-field">
-            <label>Resposta *</label>
-            <input type="text" id="reg-resposta" placeholder="Resposta da pergunta acima">
-            <div class="auth-hint">Será usada para recuperar sua senha. Guarde bem.</div>
-          </div>
-          <button class="auth-btn" onclick="criarConta()">Criar conta</button>
-          <div class="auth-links">
-            <button class="auth-link" onclick="irParaPanel('panel-login')">← Voltar ao login</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- RECUPERAR SENHA -->
-      <div class="auth-panel" id="panel-recuperar">
-        <div class="auth-card">
-          <h2>Recuperar senha</h2>
-          <p>Informe seu usuário para continuar.</p>
-          <div class="auth-error" id="rec-erro"></div>
-          <div class="auth-success" id="rec-ok"></div>
-
-          <!-- Passo 1: informar usuário -->
-          <div id="rec-passo1">
+            <h2>Entrar</h2>
+            <p>Acesse com seu usuário e senha.</p>
+            <div class="auth-error" id="login-erro"></div>
             <div class="auth-field">
               <label>Usuário</label>
-              <input type="text" id="rec-usuario" placeholder="Informe seu usuário">
-            </div>
-            <button class="auth-btn" onclick="recBuscarUsuario()">Continuar</button>
-          </div>
-
-          <!-- Passo 2: responder pergunta + nova senha -->
-          <div id="rec-passo2" style="display:none">
-            <div class="auth-field">
-              <label>Pergunta de segurança</label>
-              <p id="rec-pergunta-texto" style="font-size:.85rem;color:var(--text);padding:9px 12px;background:#f9f7f3;border-radius:7px;border:1px solid var(--border)"></p>
-            </div>
-            <div class="auth-field">
-              <label>Resposta</label>
-              <input type="text" id="rec-resposta" placeholder="Sua resposta">
-            </div>
-            <div class="auth-field">
-              <label>Nova senha *</label>
-              <div class="pw-wrap">
-                <input type="password" id="rec-nova-senha" placeholder="Mínimo 6 caracteres">
-                <button class="pw-toggle" onclick="togglePw('rec-nova-senha', this)" type="button">Mostrar</button>
+              <div class="auth-fi-wrap">
+                <svg class="auth-fi" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <input type="text" id="login-usuario" placeholder="Seu usuário" autocomplete="username" onkeydown="if(event.key==='Enter')fazerLogin()">
               </div>
             </div>
             <div class="auth-field">
-              <label>Confirmar nova senha *</label>
-              <div class="pw-wrap">
-                <input type="password" id="rec-nova-senha2" placeholder="Repita a senha">
-                <button class="pw-toggle" onclick="togglePw('rec-nova-senha2', this)" type="button">Mostrar</button>
+              <label>Senha</label>
+              <div class="auth-fi-wrap pw-wrap">
+                <svg class="auth-fi" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                <input type="password" id="login-senha" placeholder="Sua senha" autocomplete="current-password" onkeydown="if(event.key==='Enter')fazerLogin()">
+                <button class="pw-toggle" onclick="togglePw('login-senha', this)" type="button">Mostrar</button>
               </div>
             </div>
-            <button class="auth-btn" onclick="recRedefinir()">Redefinir senha</button>
-          </div>
-
-          <div class="auth-links" style="margin-top:14px">
-            <button class="auth-link" onclick="irParaPanel('panel-login')">← Voltar ao login</button>
+            <button class="auth-btn" onclick="fazerLogin()">Entrar</button>
+            <div class="auth-links">
+              <button class="auth-link" onclick="irParaPanel('panel-registro')">Criar conta</button>
+              <button class="auth-link" onclick="irParaPanel('panel-recuperar')">Esqueci minha senha</button>
+            </div>
           </div>
         </div>
-      </div>
 
+        <!-- CRIAR CONTA -->
+        <div class="auth-panel" id="panel-registro">
+          <div class="auth-card">
+            <h2>Criar nova conta</h2>
+            <p>Preencha os dados abaixo para criar sua conta.</p>
+            <div class="auth-error" id="reg-erro"></div>
+            <div class="auth-success" id="reg-ok"></div>
+            <div class="form-row" style="gap:10px">
+              <div class="auth-field">
+                <label>Nome completo *</label>
+                <input type="text" id="reg-nome" placeholder="Seu nome">
+              </div>
+              <div class="auth-field">
+                <label>Usuário *</label>
+                <input type="text" id="reg-usuario" placeholder="sem espaços">
+              </div>
+            </div>
+            <div class="auth-field">
+              <label>Senha *</label>
+              <div class="pw-wrap">
+                <input type="password" id="reg-senha" placeholder="Mínimo 6 caracteres">
+                <button class="pw-toggle" onclick="togglePw('reg-senha', this)" type="button">Mostrar</button>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label>Confirmar senha *</label>
+              <div class="pw-wrap">
+                <input type="password" id="reg-senha2" placeholder="Repita a senha">
+                <button class="pw-toggle" onclick="togglePw('reg-senha2', this)" type="button">Mostrar</button>
+              </div>
+            </div>
+            <div class="auth-field">
+              <label>Pergunta de segurança *</label>
+              <select id="reg-pergunta">
+                <option value="">Selecione…</option>
+                <option>Qual o nome do seu primeiro animal de estimação?</option>
+                <option>Qual o nome da cidade onde você nasceu?</option>
+                <option>Qual o nome da sua mãe?</option>
+                <option>Qual foi sua primeira escola?</option>
+                <option>Qual o modelo do seu primeiro carro?</option>
+              </select>
+            </div>
+            <div class="auth-field">
+              <label>Resposta *</label>
+              <input type="text" id="reg-resposta" placeholder="Resposta da pergunta acima">
+              <div class="auth-hint">Será usada para recuperar sua senha. Guarde bem.</div>
+            </div>
+            <button class="auth-btn" onclick="criarConta()">Criar conta</button>
+            <div class="auth-links">
+              <button class="auth-link" onclick="irParaPanel('panel-login')">← Voltar ao login</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RECUPERAR SENHA -->
+        <div class="auth-panel" id="panel-recuperar">
+          <div class="auth-card">
+            <h2>Recuperar senha</h2>
+            <p>Informe seu usuário para continuar.</p>
+            <div class="auth-error" id="rec-erro"></div>
+            <div class="auth-success" id="rec-ok"></div>
+            <div id="rec-passo1">
+              <div class="auth-field">
+                <label>Usuário</label>
+                <input type="text" id="rec-usuario" placeholder="Informe seu usuário">
+              </div>
+              <button class="auth-btn" onclick="recBuscarUsuario()">Continuar</button>
+            </div>
+            <div id="rec-passo2" style="display:none">
+              <div class="auth-field">
+                <label>Pergunta de segurança</label>
+                <p id="rec-pergunta-texto" style="font-size:.85rem;color:var(--text);padding:9px 12px;background:#f6f2ec;border-radius:7px;border:1px solid var(--border)"></p>
+              </div>
+              <div class="auth-field">
+                <label>Resposta</label>
+                <input type="text" id="rec-resposta" placeholder="Sua resposta">
+              </div>
+              <div class="auth-field">
+                <label>Nova senha *</label>
+                <div class="pw-wrap">
+                  <input type="password" id="rec-nova-senha" placeholder="Mínimo 6 caracteres">
+                  <button class="pw-toggle" onclick="togglePw('rec-nova-senha', this)" type="button">Mostrar</button>
+                </div>
+              </div>
+              <div class="auth-field">
+                <label>Confirmar nova senha *</label>
+                <div class="pw-wrap">
+                  <input type="password" id="rec-nova-senha2" placeholder="Repita a senha">
+                  <button class="pw-toggle" onclick="togglePw('rec-nova-senha2', this)" type="button">Mostrar</button>
+                </div>
+              </div>
+              <button class="auth-btn" onclick="recRedefinir()">Redefinir senha</button>
+            </div>
+            <div class="auth-links" style="margin-top:14px">
+              <button class="auth-link" onclick="irParaPanel('panel-login')">← Voltar ao login</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /auth-login-card -->
       <div class="auth-right-footer">Art'n Brilho — Controle de Estoque e Vendas</div>
     </div>
-  </div>
+  </div><!-- /auth-right -->
 
-</div>
+  </div><!-- /auth-window-body -->
+</div><!-- /auth-window -->
+</div><!-- /auth-wrap -->
 
 <!-- ══════════════════════════════════════
      APLICAÇÃO PRINCIPAL
