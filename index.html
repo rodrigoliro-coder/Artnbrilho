@@ -2668,29 +2668,32 @@ function abrirCamera() {
 
   _scannerInstance = new Html5Qrcode('camera-reader');
 
-  // usa facingMode diretamente — dispara o diálogo de permissão do browser
-  // sem precisar chamar getCameras() antes (que falha sem permissão prévia)
-  _scannerInstance.start(
-    { facingMode: { ideal: 'environment' } },
-    { fps: 12, qrbox: { width: 260, height: 120 } },
-    (decodedText) => {
-      let prod = produtos.find(p => p.codigo === decodedText);
-      if (!prod) prod = produtos.find(p => decodedText.includes(p.codigo));
-      fecharCamera();
-      if (prod) { adicionarProdutoAoCarrinho(prod); }
-      else { alert('Produto com código "' + decodedText + '" não encontrado no sistema.'); }
-    },
-    () => {}
-  ).then(() => {
-    statusEl.textContent = 'Câmera ativa — aponte para o código';
-  }).catch(err => {
-    const msg = (err && err.message) ? err.message : String(err);
-    if (/permission|denied|not allowed/i.test(msg)) {
-      statusEl.textContent = 'Permissão de câmera negada. Habilite nas configurações do navegador.';
-    } else {
-      statusEl.textContent = 'Erro ao acessar câmera: ' + msg;
-    }
-  });
+  const onScan = (decodedText) => {
+    let prod = produtos.find(p => p.codigo === decodedText);
+    if (!prod) prod = produtos.find(p => decodedText.includes(p.codigo));
+    fecharCamera();
+    if (prod) { adicionarProdutoAoCarrinho(prod); }
+    else { alert('Produto com código "' + decodedText + '" não encontrado no sistema.'); }
+  };
+  const scanCfg = { fps: 12, qrbox: { width: 260, height: 120 } };
+
+  const tryStart = (constraint) =>
+    _scannerInstance.start(constraint, scanCfg, onScan, () => {});
+
+  // Try rear camera first; fall back to any available camera
+  tryStart({ facingMode: 'environment' })
+    .then(() => { statusEl.textContent = 'Câmera ativa — aponte para o código'; })
+    .catch(() => tryStart({ facingMode: 'user' })
+      .then(() => { statusEl.textContent = 'Câmera ativa — aponte para o código'; })
+      .catch(err => {
+        const msg = (err && err.message) ? err.message : String(err);
+        if (/permission|denied|not allowed/i.test(msg)) {
+          statusEl.textContent = 'Permissão de câmera negada. Habilite nas configurações do navegador.';
+        } else {
+          statusEl.textContent = 'Erro ao acessar câmera: ' + msg;
+        }
+      })
+    );
 }
 
 function fecharCamera() {
