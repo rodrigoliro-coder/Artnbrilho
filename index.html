@@ -4,21 +4,22 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Artnbrilho – Controle de Estoque e Vendas</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <style>
     html { font-size: 17px; }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --brand: #b8893b; --brand-dark: #a4792f; --brand-light: #e8c878;
-      --bg: #f4efe6; --surface: #fbf8f2; --surface2: #f0e9db;
-      --border: #e4dbcb; --text: #1f1c18; --muted: #8a8175;
+      --brand: #C9A96E; --brand-dark: #96731F; --brand-light: #E8D5B0;
+      --rose: #D4A99B; --rose-light: #F2E4DF;
+      --bg: #f5f0e8; --surface: #fbf8f3; --surface2: #f0e9dc;
+      --border: #e4dbcb; --text: #1A1A1A; --muted: #8a8175;
       --green: #3e7a57; --red: #b04a3a; --yellow: #b07d2a; --blue: #2a5fa8;
       --dark: #1f1c18; --dark2: #34302a;
       --radius: 14px; --shadow: 0 1px 2px rgba(33,30,26,.05), 0 8px 24px rgba(33,30,26,.06);
     }
-    body { font-family: 'Manrope', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-weight: 500; }
+    body { font-family: 'Montserrat', 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-weight: 500; }
 
     /* ══ AUTH ══ */
     #auth-wrap {
@@ -76,9 +77,9 @@
     }
     .auth-logo-brand img { max-height: 62px; max-width: 62px; object-fit: contain; border-radius: 50%; }
     .auth-ltxt-lines { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
-    .auth-ltxt-lines .lt1 { font-family: 'Bebas Neue', sans-serif; letter-spacing: .2em; font-size: .68rem; color: var(--brand); }
+    .auth-ltxt-lines .lt1 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: .01em; font-size: .68rem; color: var(--brand); }
     .auth-ltxt-lines .ltsep { width: 30px; height: 1px; background: var(--brand); opacity: .45; margin: 2px 0; }
-    .auth-ltxt-lines .lt2 { font-family: 'Bebas Neue', sans-serif; letter-spacing: .14em; font-size: .68rem; color: var(--dark); }
+    .auth-ltxt-lines .lt2 { font-family: 'Playfair Display', Georgia, serif; letter-spacing: .03em; font-size: .68rem; color: var(--dark); }
     .auth-logo-tagline { font-size: .58rem; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; font-weight: 700; }
 
     .auth-left-title { font-size: 1.95rem; font-weight: 800; color: var(--dark); line-height: 1.2; margin-bottom: 10px; }
@@ -151,7 +152,7 @@
     .auth-panel.active { display: block; }
     .auth-card { background: transparent; border: none; border-radius: 0; padding: 0; box-shadow: none; position: static; overflow: visible; }
     .auth-card::before { display: none; }
-    .auth-card h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: .08em; color: var(--dark); margin-bottom: 4px; text-align: center; }
+    .auth-card h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 2rem; letter-spacing: .02em; color: var(--dark); margin-bottom: 4px; text-align: center; }
     .auth-card h2 + p { font-size: .79rem; color: var(--muted); margin-bottom: 22px; text-align: center; }
 
     .auth-field { margin-bottom: 13px; }
@@ -165,7 +166,7 @@
     .auth-field input, .auth-field select {
       width: 100%; background: #f6f2ec; border: 1.5px solid #e4d8c6;
       color: var(--text); border-radius: 9px; padding: 11px 13px;
-      font-family: 'Manrope', sans-serif; font-size: .88rem; font-weight: 500;
+      font-family: 'Montserrat', sans-serif; font-size: .88rem; font-weight: 500;
       transition: border-color .15s, box-shadow .15s;
     }
     .auth-fi-wrap input { padding-left: 38px; }
@@ -176,18 +177,18 @@
     .pw-toggle {
       position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
       background: none; border: none; color: var(--muted); cursor: pointer;
-      font-size: .72rem; font-weight: 700; padding: 0; font-family: 'Manrope', sans-serif;
+      font-size: .72rem; font-weight: 700; padding: 0; font-family: 'Montserrat', sans-serif;
     }
     .pw-toggle:hover { color: var(--brand); }
     .auth-btn {
       width: 100%; padding: 13px; border: none; border-radius: 10px;
       background: var(--dark); color: #fff; font-size: .84rem; font-weight: 700;
-      font-family: 'Manrope', sans-serif; cursor: pointer;
+      font-family: 'Montserrat', sans-serif; cursor: pointer;
       transition: background .15s, box-shadow .15s; margin-top: 6px; letter-spacing: .05em;
     }
     .auth-btn:hover { background: var(--dark2); box-shadow: 0 4px 16px rgba(31,28,24,.22); }
     .auth-links { display: flex; justify-content: space-between; margin-top: 18px; font-size: .76rem; }
-    .auth-link { color: var(--brand); cursor: pointer; background: none; border: none; font-size: .76rem; font-family: 'Manrope', sans-serif; font-weight: 700; }
+    .auth-link { color: var(--brand); cursor: pointer; background: none; border: none; font-size: .76rem; font-family: 'Montserrat', sans-serif; font-weight: 700; }
     .auth-link:hover { text-decoration: underline; }
     .auth-error {
       background: #fbe9e6; border: 1px solid #f1c9c2;
@@ -218,7 +219,7 @@
     }
     .logo { padding: 24px 20px 18px; border-bottom: 1px solid rgba(255,255,255,.1); }
     .logo h1 {
-      font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: .12em;
+      font-family: 'Playfair Display', Georgia, serif; font-size: 2rem; letter-spacing: .03em;
       line-height: 1; color: #fff;
     }
     .logo h1 span { color: var(--brand); }
@@ -232,7 +233,7 @@
       width: 32px; height: 32px; border-radius: 8px;
       background: var(--brand);
       display: flex; align-items: center; justify-content: center;
-      font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: .04em; color: #fff; flex-shrink: 0;
+      font-family: 'Playfair Display', Georgia, serif; font-size: 1.1rem; letter-spacing: .01em; color: #fff; flex-shrink: 0;
     }
     .user-chip-info { overflow: hidden; }
     .user-chip-name { font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: .82rem; }
@@ -252,7 +253,7 @@
     .logout-btn {
       display: flex; align-items: center; gap: 8px; width: 100%;
       background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.7);
-      border-radius: 8px; padding: 9px 12px; cursor: pointer; font-size: .82rem; font-family: 'Manrope', sans-serif; font-weight: 700; letter-spacing: .03em;
+      border-radius: 8px; padding: 9px 12px; cursor: pointer; font-size: .82rem; font-family: 'Montserrat', sans-serif; font-weight: 700; letter-spacing: .03em;
       transition: all .15s;
     }
     .logout-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
@@ -268,7 +269,7 @@
     .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
     .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--brand); }
     .card-label { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
-    .card-value { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: .05em; color: var(--dark); margin-top: 6px; line-height: 1; }
+    .card-value { font-family: 'Playfair Display', Georgia, serif; font-size: 2rem; letter-spacing: .01em; color: var(--dark); margin-top: 6px; line-height: 1; }
     .card-sub { font-size: .78rem; color: var(--muted); margin-top: 4px; font-weight: 500; }
 
     /* ══ TABLE ══ */
@@ -287,7 +288,7 @@
     .badge-gray   { background: #ede9e3; color: var(--muted); }
 
     /* ══ BUTTONS ══ */
-    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Manrope', sans-serif; font-size: .84rem; font-weight: 700; letter-spacing: .04em; transition: all .15s; white-space: nowrap; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 9px; border: none; cursor: pointer; font-family: 'Montserrat', sans-serif; font-size: .84rem; font-weight: 700; letter-spacing: .04em; transition: all .15s; white-space: nowrap; }
     .btn-primary { background: var(--dark); color: #fff; }
     .btn-primary:hover { background: var(--dark2); }
     .btn-success { background: var(--green); color: #fff; }
@@ -301,7 +302,7 @@
 
     /* ══ TOOLBAR ══ */
     .toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-    .toolbar input[type=text], .toolbar select { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 8px 12px; font-size: .88rem; font-family: 'Manrope', sans-serif; font-weight: 500; }
+    .toolbar input[type=text], .toolbar select { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 8px 12px; font-size: .88rem; font-family: 'Montserrat', sans-serif; font-weight: 500; }
     .toolbar input[type=text] { flex: 1; min-width: 180px; }
     .toolbar input[type=text]:focus, .toolbar select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(184,137,59,.12); }
 
@@ -309,10 +310,10 @@
     .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 200; align-items: center; justify-content: center; padding: 20px; }
     .overlay.open { display: flex; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 28px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(33,30,26,.18); }
-    .modal h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: .08em; color: var(--dark); margin-bottom: 20px; }
+    .modal h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; letter-spacing: .02em; color: var(--dark); margin-bottom: 20px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-weight: 700; margin-bottom: 5px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 10px 12px; font-family: 'Manrope', sans-serif; font-size: .9rem; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 7px; padding: 10px 12px; font-family: 'Montserrat', sans-serif; font-size: .9rem; font-weight: 500; }
     .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px rgba(184,137,59,.12); }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
     .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
@@ -331,7 +332,7 @@
     .alert-warning { background: #fef3e0; border: 1px solid #f5dba0; color: var(--yellow); }
     .section-title { font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-weight: 700; margin: 24px 0 10px; }
     .page-header { margin-bottom: 24px; }
-    .page-header h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: .08em; color: var(--dark); line-height: 1; }
+    .page-header h2 { font-family: 'Playfair Display', Georgia, serif; font-size: 2.4rem; letter-spacing: .02em; color: var(--dark); line-height: 1; }
     .page-header p { color: var(--muted); font-size: .84rem; margin-top: 3px; font-weight: 500; }
 
     /* ══ SALE ══ */
@@ -340,13 +341,13 @@
     .sale-item:last-child { border-bottom: none; }
     .sale-item-name { flex: 1; font-size: .84rem; font-weight: 600; }
     .sale-item-price { width: 90px; text-align: right; font-weight: 700; }
-    .sale-item input { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 5px; padding: 4px 8px; font-size: .8rem; font-family: 'Manrope', sans-serif; }
+    .sale-item input { background: var(--surface2); border: 1.5px solid var(--border); color: var(--text); border-radius: 5px; padding: 4px 8px; font-size: .8rem; font-family: 'Montserrat', sans-serif; }
     .sale-total { font-size: 1.1rem; font-weight: 800; color: var(--green); text-align: right; margin-bottom: 14px; }
 
     /* ══ BLOQUEADO ══ */
     .acesso-negado { text-align: center; padding: 60px 20px; color: var(--muted); }
     .acesso-negado svg { width: 52px; height: 52px; margin-bottom: 12px; opacity: .25; }
-    .acesso-negado h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: .06em; color: var(--dark); margin-bottom: 6px; }
+    .acesso-negado h3 { font-family: 'Playfair Display', Georgia, serif; font-size: 1.6rem; letter-spacing: .01em; color: var(--dark); margin-bottom: 6px; }
 
     @media (max-width: 680px) {
       .sidebar { width: 60px; }
@@ -411,7 +412,7 @@
 
     /* ══ CARNE TABS ══ */
     .tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
-    .tab-btn { padding: 9px 20px; font-size: .78rem; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: 'Manrope', sans-serif; }
+    .tab-btn { padding: 9px 20px; font-size: .78rem; font-weight: 700; color: var(--muted); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-family: 'Montserrat', sans-serif; }
     .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
 
     /* ══ SIDEBAR BADGE ══ */
@@ -925,7 +926,7 @@
           <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
             <div style="flex:1;position:relative">
               <input type="text" id="scan-codigo" placeholder="📷  Código de barras / QR — digite ou use o leitor"
-                style="width:100%;background:var(--surface);border:2px solid var(--brand);color:var(--text);border-radius:9px;padding:11px 14px;font-size:.9rem;font-family:'Manrope',sans-serif;font-weight:600"
+                style="width:100%;background:var(--surface);border:2px solid var(--brand);color:var(--text);border-radius:9px;padding:11px 14px;font-size:.9rem;font-family:'Montserrat',sans-serif;font-weight:600"
                 onkeydown="if(event.key==='Enter'){event.preventDefault();scanCodigoManual();}"
                 oninput="scanCodigoManual(false)">
             </div>
@@ -937,10 +938,10 @@
           <!-- LINHA 2: busca por nome/categoria -->
           <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">
             <input type="text" id="scan-busca" placeholder="Buscar por nome, categoria ou cor…"
-              style="flex:1;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 14px;font-size:.85rem;font-family:'Manrope',sans-serif"
+              style="flex:1;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:9px;padding:9px 14px;font-size:.85rem;font-family:'Montserrat',sans-serif"
               oninput="renderResultadosBusca()">
             <input type="number" id="venda-qty" placeholder="Qtd" min="1" value="1"
-              style="width:70px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-size:.84rem;font-family:'Manrope',sans-serif">
+              style="width:70px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:9px 10px;font-size:.84rem;font-family:'Montserrat',sans-serif">
           </div>
           <!-- resultados de busca por nome -->
           <div id="scan-resultados" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
@@ -953,7 +954,7 @@
         <div class="table-wrap" style="padding:20px;background:var(--surface)">
           <h3 style="font-size:.95rem;margin-bottom:16px">Dados do Pedido</h3>
           <div class="form-group"><label>Cliente</label>
-            <select id="venda-cliente-sel" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:10px 12px;font-family:'Manrope',sans-serif;font-size:.85rem" onchange="syncClienteVenda()">
+            <select id="venda-cliente-sel" style="width:100%;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:7px;padding:10px 12px;font-family:'Montserrat',sans-serif;font-size:.85rem" onchange="syncClienteVenda()">
               <option value="">Cliente não informado</option>
             </select>
           </div>
@@ -1021,11 +1022,11 @@
       <!-- Sub-tabs -->
       <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px">
         <button id="etiqbt-produto" onclick="switchEtiqTab('produto')"
-          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
           Etiquetas de Produto
         </button>
         <button id="etiqbt-envio" onclick="switchEtiqTab('envio')"
-          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
           Etiqueta de Envio
         </button>
       </div>
@@ -1079,12 +1080,12 @@
 
           <!-- Formulário -->
           <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">Destinatário</div>
+            <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.1rem;letter-spacing: .01em;color:var(--dark);margin-bottom:14px">Destinatário</div>
 
             <div class="form-group">
               <label>Selecionar cliente cadastrado</label>
               <select id="etq-av-cliente" onchange="preencherDestinatarioDoCliente()"
-                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem">
                 <option value="">Digitar manualmente…</option>
               </select>
             </div>
@@ -1128,7 +1129,7 @@
                 oninput="let d=this.value.replace(/\D/g,'').slice(0,11);this.value=d.length>7?d.replace(/^(\d{2})(\d{5})(\d*)/,'($1) $2-$3'):d.length>2?d.replace(/^(\d{2})(\d*)/,'($1) $2'):'('+d">
             </div>
 
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin:16px 0 12px;border-top:1.5px solid var(--border);padding-top:14px">Informações do Pedido <small style="font-size:.55rem;font-family:'Manrope',sans-serif;color:var(--muted);font-weight:500;letter-spacing:0">(marque para incluir na etiqueta)</small></div>
+            <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.05rem;letter-spacing: .01em;color:var(--dark);margin:16px 0 12px;border-top:1.5px solid var(--border);padding-top:14px">Informações do Pedido <small style="font-size:.55rem;font-family:'Montserrat',sans-serif;color:var(--muted);font-weight:500;letter-spacing:0">(marque para incluir na etiqueta)</small></div>
             <div class="form-row" style="gap:10px">
               <div class="form-group">
                 <label style="display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none">
@@ -1161,7 +1162,7 @@
               <div id="obs-presets-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:7px"></div>
               <div style="display:flex;gap:6px;margin-top:8px;align-items:center">
                 <input type="text" id="obs-preset-novo" placeholder="Nova mensagem predefinida…"
-                  style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Manrope',sans-serif;font-size:.8rem"
+                  style="flex:1;background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-family:'Montserrat',sans-serif;font-size:.8rem"
                   onkeydown="if(event.key==='Enter'){adicionarObsPreset();event.preventDefault()}">
                 <button class="btn btn-ghost btn-sm" onclick="adicionarObsPreset()" style="white-space:nowrap">+ Adicionar</button>
               </div>
@@ -1176,12 +1177,12 @@
           <!-- Info / Remetente preview -->
           <div style="display:flex;flex-direction:column;gap:16px">
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin-bottom:10px">Remetente (fixo)</div>
+              <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.05rem;letter-spacing: .01em;color:var(--dark);margin-bottom:10px">Remetente (fixo)</div>
               <div id="etq-av-rem-preview" style="font-size:.85rem;line-height:1.6;color:var(--muted)">Configure em Minha Conta → Dados da Loja</div>
               <a href="#" onclick="navigate('minha-conta')" style="font-size:.75rem;color:var(--brand);font-weight:700;display:inline-block;margin-top:8px">Editar dados da loja →</a>
             </div>
             <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px">
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:1.05rem;letter-spacing:.05em;color:var(--dark);margin-bottom:10px">Formato PIMACO 6288</div>
+              <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.05rem;letter-spacing: .01em;color:var(--dark);margin-bottom:10px">Formato PIMACO 6288</div>
               <ul style="font-size:.8rem;color:var(--muted);padding-left:16px;line-height:2">
                 <li>4 etiquetas por folha (tamanho carta)</li>
                 <li>138,11mm × 106,36mm cada etiqueta (PIMACO 6288)</li>
@@ -1243,11 +1244,11 @@
       <!-- Sub-tabs -->
       <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:24px">
         <button id="precbt-produtos" onclick="switchPrecTab('produtos')"
-          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid var(--brand);margin-bottom:-2px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:.88rem;color:var(--brand);cursor:pointer;transition:all .15s">
           Produtos
         </button>
         <button id="precbt-eventos" onclick="switchPrecTab('eventos')"
-          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Manrope',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
+          style="padding:10px 28px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;font-family:'Montserrat',sans-serif;font-weight:700;font-size:.88rem;color:var(--muted);cursor:pointer;transition:all .15s">
           Eventos
         </button>
       </div>
@@ -1256,18 +1257,18 @@
       <div id="prec-panel-produtos">
         <!-- Calculadora rápida -->
         <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:20px 24px;margin-bottom:24px">
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">Calculadora Rápida de Preço</div>
+          <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.15rem;letter-spacing: .01em;color:var(--dark);margin-bottom:14px">Calculadora Rápida de Preço</div>
           <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
             <div style="flex:1;min-width:150px">
               <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:5px">Valor de Custo (R$)</label>
               <input type="number" id="calc-custo" placeholder="0,00" min="0" step="0.01"
-                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:700;color:var(--text)"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:.92rem;font-weight:700;color:var(--text)"
                 oninput="calcularCustoProduto()">
             </div>
             <div style="flex:1;min-width:150px">
               <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:5px">Margem de Lucro (%)</label>
               <input type="number" id="calc-margem" value="50" min="0" step="1"
-                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:700;color:var(--brand)"
+                style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'Montserrat',sans-serif;font-size:.92rem;font-weight:700;color:var(--brand)"
                 oninput="calcularCustoProduto()">
             </div>
             <div style="flex:1;min-width:180px;background:linear-gradient(135deg,var(--brand),var(--brand-dark));border-radius:9px;padding:10px 16px">
@@ -1294,7 +1295,7 @@
           <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1.5px solid var(--border);border-radius:9px;padding:6px 14px">
             <span style="font-size:.78rem;font-weight:700;color:var(--muted);white-space:nowrap">Margem desejada</span>
             <input type="number" id="margem-pct" value="50" min="0" max="9999" step="1"
-              style="width:64px;background:transparent;border:none;font-size:.95rem;font-weight:800;color:var(--brand);text-align:center;font-family:'Manrope',sans-serif"
+              style="width:64px;background:transparent;border:none;font-size:.95rem;font-weight:800;color:var(--brand);text-align:center;font-family:'Montserrat',sans-serif"
               oninput="renderPrecificacao()">
             <span style="font-weight:800;color:var(--brand)">%</span>
           </div>
@@ -1314,23 +1315,23 @@
 
           <!-- Formulário -->
           <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:24px">
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:16px">Dados do Evento</div>
+            <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.15rem;letter-spacing: .01em;color:var(--dark);margin-bottom:16px">Dados do Evento</div>
             <div style="display:grid;gap:11px">
               <div>
                 <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Nome do Evento</label>
                 <input type="text" id="ev-nome" placeholder="Ex: Feira de Artesanato SP"
-                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem">
               </div>
               <div style="display:grid;grid-template-columns:1fr 100px;gap:10px">
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Localização</label>
                   <input type="text" id="ev-local" placeholder="Cidade/Estado"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem">
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem">
                 </div>
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Nº de Dias</label>
                   <input type="number" id="ev-dias" value="1" min="1"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700"
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700"
                     oninput="toggleEvHospedagem()">
                 </div>
               </div>
@@ -1341,41 +1342,41 @@
               <div id="ev-hospedagem-wrap" style="display:none">
                 <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Hospedagem por Noite (R$)</label>
                 <input type="number" id="ev-hospedagem" placeholder="0,00" min="0" step="0.01"
-                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Pedágio Ida+Volta (R$)</label>
                   <input type="number" id="ev-pedagio" placeholder="0,00" min="0" step="0.01"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
                 </div>
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Combustível (R$)</label>
                   <input type="number" id="ev-combustivel" placeholder="0,00" min="0" step="0.01"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
                 </div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Alimentação/Dia (R$)</label>
                   <input type="number" id="ev-alimentacao" placeholder="0,00" min="0" step="0.01"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
                 </div>
                 <div>
                   <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Taxa de Inscrição (R$)</label>
                   <input type="number" id="ev-taxa" placeholder="0,00" min="0" step="0.01"
-                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                    style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
                 </div>
               </div>
               <div>
                 <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin-bottom:4px">Outros Gastos (R$)</label>
                 <input type="number" id="ev-outros" placeholder="0,00" min="0" step="0.01"
-                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.88rem;font-weight:700">
+                  style="width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.88rem;font-weight:700">
               </div>
               <div>
                 <label style="display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--brand);margin-bottom:4px">Faturamento Esperado (R$)</label>
                 <input type="number" id="ev-receita" placeholder="0,00" min="0" step="0.01"
-                  style="width:100%;background:var(--surface2);border:2px solid var(--brand);border-radius:9px;padding:8px 12px;font-family:'Manrope',sans-serif;font-size:.92rem;font-weight:800;color:var(--brand)">
+                  style="width:100%;background:var(--surface2);border:2px solid var(--brand);border-radius:9px;padding:8px 12px;font-family:'Montserrat',sans-serif;font-size:.92rem;font-weight:800;color:var(--brand)">
               </div>
             </div>
             <div style="display:flex;gap:10px;margin-top:16px">
@@ -1392,7 +1393,7 @@
 
         <!-- Histórico -->
         <div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.05em;color:var(--dark);margin-bottom:12px">Histórico de Cálculos Salvos</div>
+          <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.1rem;letter-spacing: .01em;color:var(--dark);margin-bottom:12px">Histórico de Cálculos Salvos</div>
           <div id="ev-historico-empty" style="color:var(--muted);font-size:.83rem;padding:24px;background:var(--surface);border-radius:var(--radius);border:1.5px solid var(--border);text-align:center">
             Nenhum cálculo salvo ainda. Use o formulário acima para começar.
           </div>
@@ -2532,7 +2533,7 @@ function aplicarMarcaDagua(canvas, ctx) {
   const fontSize = Math.max(13, Math.round(lado * 0.046));
   const pad = Math.round(fontSize * 0.75);
   ctx.save();
-  ctx.font = `700 ${fontSize}px 'Manrope','Segoe UI',sans-serif`;
+  ctx.font = `700 ${fontSize}px 'Montserrat','Segoe UI',sans-serif`;
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
   ctx.shadowColor = 'rgba(0,0,0,0.55)';
@@ -3298,8 +3299,8 @@ function fecharModalEtiqueta() {
 }
 
 function gerarHTMLEtiquetaEnvio(dest, rem, info) {
-  const G  = '#b8893b';
-  const GL = '#c9a55a';
+  const G  = '#C9A96E';
+  const GL = '#E8D5B0';
   const BG = '#fdf8f0';
 
   const logoHtml = rem.logo
@@ -3453,7 +3454,7 @@ function renderObsPresets() {
   wrap.innerHTML = presets.map((txt, i) => `
     <div style="display:flex;align-items:center;gap:0;background:var(--surface2);border:1.5px solid var(--border);border-radius:20px;overflow:hidden;max-width:100%">
       <button onclick="aplicarObsPreset(${i})"
-        style="background:none;border:none;padding:5px 10px;font-family:'Manrope',sans-serif;font-size:.73rem;color:var(--text);cursor:pointer;text-align:left;line-height:1.3;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
+        style="background:none;border:none;padding:5px 10px;font-family:'Montserrat',sans-serif;font-size:.73rem;color:var(--text);cursor:pointer;text-align:left;line-height:1.3;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"
         title="${txt.replace(/"/g,'&quot;')}">${txt}</button>
       <button onclick="removerObsPreset(${i})"
         style="background:none;border:none;border-left:1px solid var(--border);padding:5px 8px;cursor:pointer;color:var(--muted);font-size:.75rem;line-height:1;flex-shrink:0"
@@ -4116,7 +4117,7 @@ function calcularViabilidadeEvento() {
   const res = document.getElementById('ev-resultado');
   if (res) res.innerHTML = `
     <div style="width:100%">
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.15rem;letter-spacing:.05em;color:var(--dark);margin-bottom:14px">${nome}${local ? ` — ${local}` : ''}</div>
+      <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.15rem;letter-spacing: .01em;color:var(--dark);margin-bottom:14px">${nome}${local ? ` — ${local}` : ''}</div>
       <table style="width:100%;border-collapse:collapse;font-size:.83rem;margin-bottom:14px">
         <tbody>
           ${linhas.map(([desc,det,val])=>`<tr><td style="padding:5px 0;color:var(--muted)">${desc}${det&&det!=='–'?` <small>(${det})</small>`:''}</td><td style="padding:5px 0;text-align:right;font-weight:700">${val}</td></tr>`).join('')}
@@ -4143,7 +4144,7 @@ function calcularViabilidadeEvento() {
         </tbody>
       </table>
       <div style="background:${bgVeredicto};border:1.5px solid ${corVeredicto};border-radius:10px;padding:12px 16px;text-align:center">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:.06em;color:${corVeredicto}">${veredicto}</div>
+        <div style="font-family:'Playfair Display', Georgia, serif;font-size:1.3rem;letter-spacing: .01em;color:${corVeredicto}">${veredicto}</div>
         ${lucro < 0 ? `<div style="font-size:.75rem;color:var(--muted);margin-top:4px">Precisa faturar mais ${brl(-lucro)} para cobrir os custos.</div>` : ''}
       </div>
       <button class="btn btn-primary" onclick="salvarCalculoEvento()" style="width:100%;margin-top:12px">Salvar este cálculo</button>
