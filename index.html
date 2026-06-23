@@ -1533,6 +1533,27 @@
           <button class="btn btn-primary btn-sm" onclick="salvarConfiguracaoLoja()" style="margin-top:6px">Salvar dados da loja</button>
         </div>
 
+        <!-- INTELIGÊNCIA ARTIFICIAL -->
+        <div class="table-wrap" style="padding:24px;margin-top:20px">
+          <h3 style="font-size:.95rem;margin-bottom:4px">Preenchimento Automático com IA</h3>
+          <p style="font-size:.75rem;color:var(--muted);margin-bottom:14px">Ao cadastrar um produto, a IA lê a foto da peça e preenche categoria, nome, descrição, cor e tamanho automaticamente. Você revisa e altera o que quiser antes de salvar.</p>
+          <div class="auth-success" id="mc-ia-ok" style="display:none;margin-bottom:12px"></div>
+          <div class="form-group">
+            <label>Chave da API (Anthropic)</label>
+            <input type="password" id="cfg-ia-key" placeholder="sk-ant-..." autocomplete="off">
+            <div style="font-size:.67rem;color:var(--muted);margin-top:3px">A chave fica salva somente neste computador. Crie a sua em <strong>console.anthropic.com</strong>. Cada leitura de foto custa centavos.</div>
+          </div>
+          <div class="form-group">
+            <label>Modelo de IA</label>
+            <select id="cfg-ia-model">
+              <option value="claude-opus-4-8">Máxima qualidade (Opus)</option>
+              <option value="claude-sonnet-4-6">Equilibrado (Sonnet)</option>
+              <option value="claude-haiku-4-5">Mais rápido e econômico (Haiku)</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="salvarConfigIA()" style="margin-top:6px">Salvar configuração de IA</button>
+        </div>
+
         <!-- BACKUP DE DADOS -->
         <div class="table-wrap" style="padding:24px;margin-top:20px">
           <h3 style="font-size:.95rem;margin-bottom:4px">Backup de Dados</h3>
@@ -1587,6 +1608,11 @@
         <div id="img-upload-hint" style="font-size:.8rem;color:var(--muted)">Clique para selecionar imagem</div>
         <img id="prod-imagem-preview" class="img-upload-preview" alt="preview">
       </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-ia-analisar" onclick="analisarPecaIA()" style="width:100%;justify-content:center;gap:7px;margin-top:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M12 3l1.9 4.8L18.7 9.7 13.9 11.6 12 16.4 10.1 11.6 5.3 9.7 10.1 7.8z"/><path d="M19 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+        Ler peça com IA (preencher automaticamente)
+      </button>
+      <div id="prod-ia-status" style="font-size:.72rem;text-align:center;color:var(--muted);min-height:16px;margin-top:5px"></div>
     </div>
     <div class="form-group"><label>Descrição</label><textarea id="prod-descricao" rows="2" placeholder="Detalhes…"></textarea></div>
     <div class="form-row">
@@ -2591,6 +2617,7 @@ function previewImagem(input) {
       prev.src = base64; prev.style.display = 'block';
       document.getElementById('img-upload-hint').style.display = 'none';
       document.getElementById('prod-imagem').value = base64;
+      if (!editandoProdutoId && (config.iaApiKey || '').trim()) analisarPecaIA(true);
     };
     img.src = e.target.result;
   };
@@ -2601,6 +2628,7 @@ function abrirModalProduto(id = null) {
   editandoProdutoId = id;
   const el = v => document.getElementById(v);
   const prev = el('prod-imagem-preview');
+  const iaStatus = el('prod-ia-status'); if (iaStatus) iaStatus.textContent = '';
   if (id) {
     const p = produtos.find(x => x.id === id);
     el('modal-prod-titulo').textContent = 'Editar Produto';
@@ -3256,6 +3284,8 @@ function carregarConfiguracaoLoja() {
       prev.innerHTML = `<span style="font-size:.6rem;color:var(--muted);text-align:center;padding:2px">SEM LOGO</span>`;
     }
   }
+  const iaKey = document.getElementById('cfg-ia-key'); if (iaKey) iaKey.value = config.iaApiKey || '';
+  const iaModel = document.getElementById('cfg-ia-model'); if (iaModel) iaModel.value = config.iaModelo || 'claude-opus-4-8';
 }
 
 function salvarConfiguracaoLoja() {
@@ -3276,6 +3306,117 @@ function salvarConfiguracaoLoja() {
   renderLogoApp();
   const ok = document.getElementById('mc-cfg-ok');
   if (ok) { ok.textContent = 'Dados da loja salvos!'; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'), 2500); }
+}
+
+/* ===== Preenchimento automático com IA (visão) ===== */
+const IA_CATEGORIAS = ['Camiseta Básica','Camiseta Estampada','Camiseta Oversized','Baby Look','Cropped','Regata','Polo','Moletom','Blusa de Frio','Calça','Short/Bermuda','Acessório'];
+const IA_TAMANHOS   = ['Único','PP','P','M','G','GG','XGG'];
+
+function salvarConfigIA() {
+  const v = id => (document.getElementById(id)?.value || '').trim();
+  config.iaApiKey = v('cfg-ia-key');
+  config.iaModelo = v('cfg-ia-model') || 'claude-opus-4-8';
+  salvarConfig();
+  const ok = document.getElementById('mc-ia-ok');
+  if (ok) { ok.textContent = 'Configuração de IA salva!'; ok.classList.add('show'); setTimeout(()=>ok.classList.remove('show'), 2500); }
+}
+
+function aplicarDadosIA(d) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null && String(val).trim() !== '') el.value = val; };
+  if (d.categoria && IA_CATEGORIAS.includes(d.categoria)) document.getElementById('prod-categoria').value = d.categoria;
+  set('prod-nome', d.nome);
+  set('prod-descricao', d.descricao);
+  set('prod-cor', d.cor);
+  if (d.tamanho && IA_TAMANHOS.includes(d.tamanho)) document.getElementById('prod-tamanho').value = d.tamanho;
+  set('prod-modelo', d.modelo);
+}
+
+async function analisarPecaIA(auto = false) {
+  const status = document.getElementById('prod-ia-status');
+  const btn = document.getElementById('btn-ia-analisar');
+  const setStatus = (msg, cor) => { if (status) { status.textContent = msg; status.style.color = cor || 'var(--muted)'; } };
+
+  const dataUrl = document.getElementById('prod-imagem').value;
+  if (!dataUrl) { if (!auto) setStatus('Selecione uma imagem primeiro.', 'var(--red)'); return; }
+
+  const apiKey = (config.iaApiKey || '').trim();
+  if (!apiKey) { setStatus('Configure a chave da IA em Configurações.', 'var(--red)'); return; }
+
+  const m = dataUrl.match(/^data:(.*?);base64,(.*)$/);
+  if (!m) { setStatus('Imagem inválida.', 'var(--red)'); return; }
+  const mediaType = m[1], dataB64 = m[2];
+  const modelo = config.iaModelo || 'claude-opus-4-8';
+
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+  setStatus('Analisando a peça com IA…');
+
+  const prompt = `Você é o assistente de catálogo da loja de moda feminina Art'n Brilho. Analise a foto desta peça de roupa e preencha as informações para o cadastro. Responda sempre em português do Brasil.
+- categoria: escolha exatamente uma das opções permitidas.
+- nome: nome comercial curto e atrativo para a vitrine (não inclua o tamanho).
+- descricao: 1 a 2 frases descrevendo estampa, cores e estilo da peça.
+- cor: a cor predominante do tecido (ex: Preto, Azul Marinho, Off White).
+- tamanho: use "Único" se não for possível identificar pela foto.
+- modelo: o estilo da peça (ex: Casual, Streetwear, Fitness, Básica) ou deixe vazio.`;
+
+  const body = {
+    model: modelo,
+    max_tokens: 1024,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image', source: { type: 'base64', media_type: mediaType, data: dataB64 } },
+        { type: 'text', text: prompt }
+      ]
+    }],
+    output_config: {
+      format: {
+        type: 'json_schema',
+        schema: {
+          type: 'object',
+          properties: {
+            categoria: { type: 'string', enum: IA_CATEGORIAS },
+            nome:      { type: 'string' },
+            descricao: { type: 'string' },
+            cor:       { type: 'string' },
+            tamanho:   { type: 'string', enum: IA_TAMANHOS },
+            modelo:    { type: 'string' }
+          },
+          required: ['categoria','nome','descricao','cor','tamanho','modelo'],
+          additionalProperties: false
+        }
+      }
+    }
+  };
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) {
+      let detalhe = 'erro ' + r.status;
+      try { const e = await r.json(); detalhe = (e.error && e.error.message) || detalhe; } catch (_) {}
+      if (r.status === 401) detalhe = 'Chave da IA inválida. Verifique em Configurações.';
+      setStatus('Falha na IA: ' + detalhe, 'var(--red)');
+      return;
+    }
+    const j = await r.json();
+    if (j.stop_reason === 'refusal') { setStatus('A IA não conseguiu analisar esta imagem.', 'var(--red)'); return; }
+    const bloco = (j.content || []).find(b => b.type === 'text');
+    if (!bloco) { setStatus('Resposta vazia da IA.', 'var(--red)'); return; }
+    aplicarDadosIA(JSON.parse(bloco.text));
+    setStatus('Campos preenchidos pela IA — revise e ajuste o que quiser.', 'var(--green)');
+  } catch (err) {
+    setStatus('Não foi possível conectar à IA. Verifique a internet.', 'var(--red)');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  }
 }
 
 let _etqVendaId = null;
