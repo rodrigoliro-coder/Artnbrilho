@@ -2054,19 +2054,7 @@ async function seedAdminPadrao() {
 
 function seedProdutosDemo() {
   if (produtos.length > 0) return;
-  const demo = [
-    {codigo:'ART-001',nome:'Blusa Floral',modelo:'Floral Spring',categoria:'Blusa de Frio',tamanho:'M',cor:'Rosa',preco:59.90,custo:25,estoque:8,minimo:2,descricao:'',imagem:''},
-    {codigo:'ART-002',nome:'Calça Jeans Slim',modelo:'Slim Fit',categoria:'Calça',tamanho:'38',cor:'Azul Marinho',preco:129.90,custo:60,estoque:5,minimo:2,descricao:'',imagem:''},
-    {codigo:'ART-003',nome:'Vestido Midi',modelo:'Classic Midi',categoria:'Baby Look',tamanho:'P',cor:'Verde',preco:189.90,custo:80,estoque:1,minimo:2,descricao:'Lindo para eventos',imagem:''},
-    {codigo:'ART-004',nome:'Saia Plissada',modelo:'Plissê Urban',categoria:'Short/Bermuda',tamanho:'G',cor:'Preto',preco:89.90,custo:35,estoque:0,minimo:2,descricao:'',imagem:''},
-    {codigo:'ART-005',nome:'Camiseta Básica',modelo:'Essential',categoria:'Camiseta Básica',tamanho:'M',cor:'Branco',preco:49.90,custo:18,estoque:15,minimo:3,descricao:'',imagem:''},
-    {codigo:'ART-006',nome:'Camiseta Estampada',modelo:'Streetwear',categoria:'Camiseta Estampada',tamanho:'G',cor:'Preto',preco:69.90,custo:25,estoque:10,minimo:3,descricao:'',imagem:''},
-    {codigo:'ART-007',nome:'Broche Urso Cristal',modelo:'Crystal Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:39.90,custo:15,estoque:5,minimo:2,descricao:'Broche urso com strass e estrutura dourada',imagem:''},
-    {codigo:'ART-008',nome:'Broche Guirlanda Cristal',modelo:'Crystal Wreath',categoria:'Acessório',tamanho:'Único',cor:'Rosa',preco:35.90,custo:12,estoque:6,minimo:2,descricao:'Broche guirlanda com pedras rosa e strass',imagem:''},
-    {codigo:'ART-009',nome:'Brinco Urso com Pérola',modelo:'Pearl Bear',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:49.90,custo:20,estoque:4,minimo:2,descricao:'Par de brincos urso com strass e pingente de pérola',imagem:''},
-    {codigo:'ART-010',nome:'Broche Abelha',modelo:'Bee Pin',categoria:'Acessório',tamanho:'Único',cor:'Preto/Dourado',preco:29.90,custo:10,estoque:8,minimo:2,descricao:'Broche abelha com esmalte preto e asas em rosa',imagem:''},
-    {codigo:'ART-011',nome:'Broche Gota Dourada',modelo:'Drop Gold',categoria:'Acessório',tamanho:'Único',cor:'Dourado',preco:45.90,custo:18,estoque:3,minimo:2,descricao:'Broche gota metalizada com acabamento espelhado',imagem:''},
-  ];
+  const demo = [];
   demo.forEach(p => {
     const id = genId();
     produtos.push({id,...p,criadoEm:agora()});
