@@ -3359,7 +3359,7 @@ async function analisarPecaIA(auto = false) {
   if (!dataUrl) { if (!auto) setStatus('Selecione uma imagem primeiro.', 'var(--red)'); return; }
 
   const apiKey = (config.iaApiKey || '').trim();
-  if (!apiKey) { setStatus('Configure a chave da IA em Configurações.', 'var(--red)'); return; }
+  if (!apiKey) { setStatus('Configure a chave da IA em Minha Conta.', 'var(--red)'); return; }
 
   const m = dataUrl.match(/^data:(.*?);base64,(.*)$/);
   if (!m) { setStatus('Imagem inválida.', 'var(--red)'); return; }
@@ -3421,7 +3421,7 @@ async function analisarPecaIA(auto = false) {
     if (!r.ok) {
       let detalhe = 'erro ' + r.status;
       try { const e = await r.json(); detalhe = (e.error && e.error.message) || detalhe; } catch (_) {}
-      if (r.status === 401) detalhe = 'Chave da IA inválida. Verifique em Configurações.';
+      if (r.status === 401) detalhe = 'Chave da IA inválida. Verifique em Minha Conta.';
       setStatus('Falha na IA: ' + detalhe, 'var(--red)');
       return;
     }
