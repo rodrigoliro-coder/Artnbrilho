@@ -416,6 +416,35 @@
 
     /* ══ SIDEBAR BADGE ══ */
     .nav-badge { background: var(--red); color: #fff; border-radius: 8px; font-size: .6rem; font-weight: 800; padding: 1px 5px; margin-left: auto; }
+
+    /* ══ TELA DE LOGIN — sem moldura de janela, acesso à direita ══ */
+    #auth-wrap { background: #ece3d3; padding: 0; }
+    .auth-titlebar { display: none !important; }
+    .auth-window {
+      max-width: none; width: 100%; height: 100vh;
+      border-radius: 0; box-shadow: none;
+    }
+    .auth-window-body { height: 100%; }
+    .auth-left {
+      flex: 1 1 54%;
+      background-image: none !important;
+      background: linear-gradient(155deg, #fbf8f2 0%, #f5eede 55%, #efe4d2 100%) !important;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 48px 56px; position: relative; overflow: hidden;
+    }
+    .auth-left > * { visibility: visible !important; }
+    .auth-right {
+      width: 46%; max-width: 540px; flex: 0 0 46%;
+      background: #fffdf9;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 40px 46px;
+    }
+    .auth-right-inner { width: 100%; max-width: 380px; }
+    @media (max-width: 920px) {
+      .auth-left, .auth-sep { display: none !important; }
+      .auth-right { width: 100%; max-width: none; flex: 1 1 100%; }
+      .auth-window { height: 100vh; }
+    }
   </style>
 </head>
 <body>
@@ -434,16 +463,6 @@
 ══════════════════════════════════════ -->
 <div id="auth-wrap">
 <div class="auth-window">
-
-  <!-- BARRA MACOS -->
-  <div class="auth-titlebar">
-    <div class="auth-tb-dots">
-      <div class="auth-tb-dot auth-tb-dot-r"></div>
-      <div class="auth-tb-dot auth-tb-dot-y"></div>
-      <div class="auth-tb-dot auth-tb-dot-g"></div>
-    </div>
-    <div class="auth-titlebar-title">Art'n Brilho – Controle de Estoque e Vendas</div>
-  </div>
 
   <div class="auth-window-body">
 
